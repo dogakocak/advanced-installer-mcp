@@ -22,6 +22,14 @@ claude mcp add advinst -- "<repo>\src\AdvancedInstallerMcp\bin\Debug\net10.0-win
 Point the client at the built executable, not at `dotnet run`: build output on stdout would corrupt the stdio
 protocol.
 
+## Tests
+
+```
+dotnet test
+```
+
+The tests build small MSI packages with `msi.dll` itself, so they do not need Advanced Installer.
+
 ## License
 
 MIT. This project is not affiliated with Caphyon or Advanced Installer.

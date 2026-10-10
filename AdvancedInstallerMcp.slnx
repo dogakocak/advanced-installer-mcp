@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/AdvancedInstallerMcp/AdvancedInstallerMcp.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AdvancedInstallerMcp.Tests/AdvancedInstallerMcp.Tests.csproj" />
+  </Folder>
 </Solution>

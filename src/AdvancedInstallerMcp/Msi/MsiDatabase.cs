@@ -1,0 +1,117 @@
+namespace AdvancedInstallerMcp.Msi;
+
+// Thin wrapper over an MSI database handle. The server only reads packages; Create, Execute and Commit exist so
+// tests can build small packages without Advanced Installer.
+public sealed class MsiDatabase : IDisposable
+{
+    private readonly MsiHandle _handle;
+
+    private MsiDatabase(MsiHandle handle) => _handle = handle;
+
+    public static MsiDatabase OpenReadOnly(string path)
+    {
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException("MSI package not found.", path);
+        }
+
+        return Open(path, NativeMethods.OpenReadOnly);
+    }
+
+    internal static MsiDatabase Create(string path) => Open(path, NativeMethods.OpenCreate);
+
+    // Values for the `?` markers in the query are bound in order: string, int or null.
+    public IReadOnlyList<T> Query<T>(string sql, Func<MsiRecord, T> map, params object?[] parameters)
+    {
+        using var view = OpenAndExecute(sql, parameters);
+        var rows = new List<T>();
+
+        while (true)
+        {
+            var result = NativeMethods.MsiViewFetch(view, out var record);
+            if (result == NativeMethods.ErrorNoMoreItems)
+            {
+                break;
+            }
+
+            MsiException.ThrowIfFailed(result, $"Fetching rows of \"{sql}\"");
+            using var handle = MsiHandle.Own(record);
+            rows.Add(map(new MsiRecord(handle)));
+        }
+
+        NativeMethods.MsiViewClose(view);
+        return rows;
+    }
+
+    internal void Execute(string sql, params object?[] parameters)
+    {
+        using var view = OpenAndExecute(sql, parameters);
+        NativeMethods.MsiViewClose(view);
+    }
+
+    internal void Commit() => MsiException.ThrowIfFailed(NativeMethods.MsiDatabaseCommit(_handle), "Commit");
+
+    public void Dispose() => _handle.Dispose();
+
+    private static MsiDatabase Open(string path, nint mode)
+    {
+        MsiException.ThrowIfFailed(NativeMethods.MsiOpenDatabase(path, mode, out var handle), $"Opening \"{path}\"");
+        return new MsiDatabase(MsiHandle.Own(handle));
+    }
+
+    private MsiHandle OpenAndExecute(string sql, object?[] parameters)
+    {
+        MsiException.ThrowIfFailed(NativeMethods.MsiDatabaseOpenView(_handle, sql, out var viewHandle), $"Query \"{sql}\"");
+        var view = MsiHandle.Own(viewHandle);
+
+        try
+        {
+            using var record = CreateParameterRecord(parameters);
+            MsiException.ThrowIfFailed(NativeMethods.MsiViewExecute(view, record ?? MsiHandle.None), $"Executing \"{sql}\"");
+            return view;
+        }
+        catch
+        {
+            view.Dispose();
+            throw;
+        }
+    }
+
+    private static MsiHandle? CreateParameterRecord(object?[] parameters)
+    {
+        if (parameters.Length == 0)
+        {
+            return null;
+        }
+
+        var record = MsiHandle.Own(NativeMethods.MsiCreateRecord((uint)parameters.Length));
+
+        try
+        {
+            BindParameters(record, parameters);
+            return record;
+        }
+        catch
+        {
+            record.Dispose();
+            throw;
+        }
+    }
+
+    private static void BindParameters(MsiHandle record, object?[] parameters)
+    {
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            var field = (uint)(i + 1);
+            var result = parameters[i] switch
+            {
+                null => NativeMethods.ErrorSuccess,
+                string text => NativeMethods.MsiRecordSetString(record, field, text),
+                int number => NativeMethods.MsiRecordSetInteger(record, field, number),
+                var other => throw new ArgumentException($"Unsupported parameter type {other.GetType().Name}.", nameof(parameters)),
+            };
+
+            MsiException.ThrowIfFailed(result, $"Binding parameter {field}");
+        }
+    }
+}
