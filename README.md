@@ -14,13 +14,16 @@ Status: early development. See [ADR 0001](docs/adr/0001-tech-stack-and-v0.1-scop
 
 ## Build and register with Claude Code
 
+Publish to a folder of its own and point the client at that executable:
+
 ```
-dotnet build
-claude mcp add advinst -- "<repo>\src\AdvancedInstallerMcp\bin\Debug\net10.0-windows\AdvancedInstallerMcp.exe"
+dotnet publish src/AdvancedInstallerMcp -c Release -o "%LOCALAPPDATA%dvinst-mcp"
+claude mcp add advinst -- "%LOCALAPPDATA%dvinst-mcp\AdvancedInstallerMcp.exe"
 ```
 
-Point the client at the built executable, not at `dotnet run`: build output on stdout would corrupt the stdio
-protocol.
+- Not `bin\Debug`: the client keeps the server running for the whole session, which locks the file and breaks the
+  next `dotnet build`. Publish again (with the session closed) to update the registered server.
+- Not `dotnet run`: build output on stdout would corrupt the stdio protocol.
 
 ## Tests
 
