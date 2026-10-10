@@ -55,8 +55,12 @@ so it needs its own security design) and `.aip` editing tools (`add_file`, `set_
 - **Reading MSI files:** a thin P/Invoke wrapper of our own over `msi.dll` (`MsiOpenDatabase`,
   `MsiDatabaseOpenView`, `MsiViewExecute`, `MsiViewFetch`, `MsiRecordGetString`, `MsiCloseHandle`, wrapped in
   `SafeHandle`).
-- **Tests:** xUnit + Shouldly. Fixtures are built from a small sample `.aip` in this repo that contains a
-  deliberately clipped label and an overlapping control, plus a fixed copy, so every check is tested both ways.
+- **Tests:** xUnit + Shouldly. Fixtures are ~~built from a small sample `.aip` in this repo~~ small MSI packages
+  that the tests create through `msi.dll` itself, with a deliberately clipped label and an overlapping control,
+  plus a fixed copy, so every check is tested both ways. *Amended 2026-10-11:* Advanced Installer's command line
+  has no commands for dialogs or controls, so a sample `.aip` could only be made in the GUI or by hand-editing XML;
+  generated packages need no Advanced Installer and run in CI. An opt-in test (`ADVINST_MCP_REAL_MSI`) checks the
+  reader against a real package.
 - **License:** MIT. The project is not affiliated with Caphyon or Advanced Installer.
 
 ## Alternatives considered
