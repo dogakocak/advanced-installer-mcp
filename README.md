@@ -17,8 +17,8 @@ Status: early development. See [ADR 0001](docs/adr/0001-tech-stack-and-v0.1-scop
 Publish to a folder of its own and point the client at that executable:
 
 ```
-dotnet publish src/AdvancedInstallerMcp -c Release -o "%LOCALAPPDATA%dvinst-mcp"
-claude mcp add advinst -- "%LOCALAPPDATA%dvinst-mcp\AdvancedInstallerMcp.exe"
+dotnet publish src/AdvancedInstallerMcp -c Release -o "%LOCALAPPDATA%\advinst-mcp"
+claude mcp add advinst -- "%LOCALAPPDATA%\advinst-mcp\AdvancedInstallerMcp.exe"
 ```
 
 - Not `bin\Debug`: the client keeps the server running for the whole session, which locks the file and breaks the
