@@ -28,8 +28,9 @@ that calibration, plus a visual check of the Text control rule.
 | PushButton | Install now | 52 | 44 units = 58 px | 6 px |
 | PushButton | &Browse... | 47 | 40 units = 53 px | 6 px |
 
-One unit narrower always cut the label, so with 1.33 px steps the thresholds are exact for these labels: a check
-box needs its text width **+ 16 px**, a push button its text width **+ 6 px**. `DialogLinter.CheckBoxTextOffset`
+One unit narrower always cut the label. Units are 1.33 px apart, so a label pins the threshold exactly only when
+the cut and the whole width are 1 px apart (two labels per type); the others leave a 2 px gap that agrees with the
+same value. A check box needs its text width **+ 16 px**, a push button its text width **+ 6 px**. `DialogLinter.CheckBoxTextOffset`
 and `PushButtonTextMargin` hold these values; at 120 and 144 DPI they are scaled linearly, which is not calibrated.
 
 ## What a label that does not fit looks like
@@ -37,7 +38,10 @@ and `PushButtonTextMargin` hold these values; at 120 and 144 DPI they are scaled
 - **CheckBox:** the label wraps at word boundaries inside the width left of the box, and the lines are centred
   vertically, so in a 12-unit check box a two-line label shows the bottom of the first line and the top of the
   second. Not "...". So a check box is checked like wrapping text: wrapped height in (width − 16 px) ≤ height.
-- **PushButton:** the label wraps too (visible in the narrow buttons) and gets cut the same way.
+- **PushButton:** the label wraps too (visible in the narrow buttons) and gets cut the same way. `lint_dialog` still
+  checks buttons as one line: in a standard 17-unit button a second line (26 px) never fits in 23 px, and the
+  vertical margins needed for a deliberately tall two-line button are not calibrated. Such a button is reported
+  as clipped (known limitation).
 - **Text:** shows the lines that fit and ends the last visible one with "...". The ADR 0003 hint (two lines in
   Tahoma 8) shows as one line ending in "The connec..." at 230×18 and as two full lines at 230×20; a 9 pt bold
   "Ready to install <long product name>" title shows one line with "..." at 200×15 and two lines at 200×22. All four
