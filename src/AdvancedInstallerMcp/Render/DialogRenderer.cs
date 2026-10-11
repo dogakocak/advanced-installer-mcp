@@ -47,7 +47,7 @@ public static class DialogRenderer
         var width = InstallerUnits.ToPixels(dialog.Width, dpi);
         var height = InstallerUnits.ToPixels(dialog.Height, dpi);
 
-        // No alpha channel: GDI does not write one, so text drawn on an alpha surface can come out transparent.
+        // No alpha channel: GDI does not write one, so the surface has none either.
         using var bitmap = new Bitmap(Math.Max(1, width), Math.Max(1, height), PixelFormat.Format32bppRgb);
         using (var graphics = Graphics.FromImage(bitmap))
         {
