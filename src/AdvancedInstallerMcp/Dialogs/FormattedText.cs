@@ -37,6 +37,33 @@ public static partial class FormattedText
         return (result, resolved, unresolved);
     }
 
+    // For render_dialog (ADR 0006): like Resolve, but a reference the package cannot resolve stays in the text as
+    // written ("[INSTALLDIR]"), so a picture does not hide that text is missing. Unresolved lists those names.
+    public static (string Text, IReadOnlyList<string> Unresolved) ResolveForDisplay(
+        string text, IReadOnlyDictionary<string, string> properties)
+    {
+        var unresolved = new List<string>();
+
+        var result = Reference().Replace(text, match =>
+        {
+            var name = match.Groups[1].Value;
+            if (name.Length == 2 && name[0] == '\\')
+            {
+                return name[1..];
+            }
+
+            if (properties.TryGetValue(name, out var value) && !Reference().IsMatch(value))
+            {
+                return value;
+            }
+
+            unresolved.Add(name);
+            return match.Value;
+        });
+
+        return (result, unresolved);
+    }
+
     // The escape first: in "[\]]" the other branch would stop at the escaped bracket.
     [GeneratedRegex(@"\[(\\.|[^\[\]]+)\]")]
     private static partial Regex Reference();

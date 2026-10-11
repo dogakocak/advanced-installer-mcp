@@ -24,13 +24,7 @@ public static class TextMeasurer
     public static TextMeasurement Measure(string text, ResolvedFont font, int dpi, int maxWidth, MeasureOptions options)
     {
         using var dc = DeviceContextHandle.CreateMemory();
-        using var gdiFont = FontHandle.Own(NativeMethods.CreateFont(
-            -InstallerUnits.PointsToPixels(font.Size, dpi), 0, 0, 0,
-            font.Bits.HasFlag(TextStyleBits.Bold) ? NativeMethods.FwBold : NativeMethods.FwNormal,
-            font.Bits.HasFlag(TextStyleBits.Italic) ? 1u : 0u,
-            font.Bits.HasFlag(TextStyleBits.Underline) ? 1u : 0u,
-            font.Bits.HasFlag(TextStyleBits.Strike) ? 1u : 0u,
-            NativeMethods.DefaultCharset, 0, 0, 0, 0, font.FaceName));
+        using var gdiFont = GdiFonts.Create(font, dpi);
 
         var previous = NativeMethods.SelectObject(dc, gdiFont.DangerousGetHandle());
         try

@@ -23,4 +23,18 @@ public sealed class FormattedTextTests
     {
         FormattedText.Resolve(text, Properties).ShouldBe((expected, resolved, unresolved));
     }
+
+    // For a picture: what the package does not know stays visible as written.
+    [Theory]
+    [InlineData("Welcome to [ProductName]", "Welcome to Sample App", new string[0])]
+    [InlineData("Path: [INSTALLDIR]", "Path: [INSTALLDIR]", new[] { "INSTALLDIR" })]
+    [InlineData("[Nested]", "[Nested]", new[] { "Nested" })]
+    [InlineData("A [\\[]b", "A [b", new string[0])]
+    public void Display_keeps_unresolved_references(string text, string expected, string[] unresolved)
+    {
+        var (display, names) = FormattedText.ResolveForDisplay(text, Properties);
+
+        display.ShouldBe(expected);
+        names.ShouldBe(unresolved);
+    }
 }

@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using AdvancedInstallerMcp.Dialogs;
 using AdvancedInstallerMcp.Lint;
-using AdvancedInstallerMcp.Msi;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 
@@ -24,17 +23,7 @@ public static class LintDialogTool
         [Description("Name of one dialog (the Dialog table's key, e.g. 'WelcomeDlg'). Omit to check every dialog.")]
         string? dialog = null)
     {
-        if (!File.Exists(msiPath))
-        {
-            throw new McpException($"File not found: {msiPath}");
-        }
-
-        if (string.Equals(Path.GetExtension(msiPath), ".aip", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new McpException("lint_dialog reads the built .msi, not the .aip project. Build the project first.");
-        }
-
-        using var database = OpenPackage(msiPath);
+        using var database = PackageFile.Open(msiPath, "lint_dialog");
         var package = DialogPackage.Load(database);
 
         IReadOnlyList<string> names;
@@ -54,17 +43,5 @@ public static class LintDialogTool
 
         var dialogs = names.Select(name => package.FindDialog(name)!).ToList();
         return new LintReport(msiPath, names, DialogLinter.Lint(package, dialogs));
-    }
-
-    private static MsiDatabase OpenPackage(string msiPath)
-    {
-        try
-        {
-            return MsiDatabase.OpenReadOnly(msiPath);
-        }
-        catch (MsiException e)
-        {
-            throw new McpException($"Not a readable MSI package: {msiPath} ({e.Message})");
-        }
     }
 }

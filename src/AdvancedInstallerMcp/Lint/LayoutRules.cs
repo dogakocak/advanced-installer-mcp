@@ -30,6 +30,8 @@ public static class LayoutRules
         "PathEdit", "PushButton", "RadioButtonGroup", "SelectionTree", "VolumeSelectCombo",
     };
 
+    public static bool IsComboType(string type) => ComboTypes.Contains(type);
+
     // A closed combo box: one line of the dialog font plus border and padding. Approximate, not calibrated.
     public const int ComboBoxPadding = 8;
 

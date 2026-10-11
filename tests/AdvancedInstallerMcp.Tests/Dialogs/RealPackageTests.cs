@@ -31,4 +31,24 @@ public sealed class RealPackageTests
             }
         }
     }
+
+    [Fact]
+    public void Every_dialog_of_a_real_package_renders()
+    {
+        var path = Environment.GetEnvironmentVariable("ADVINST_MCP_REAL_MSI");
+        Assert.SkipWhen(string.IsNullOrEmpty(path), "ADVINST_MCP_REAL_MSI is not set.");
+
+        using var database = MsiDatabase.OpenReadOnly(path!);
+        var package = DialogPackage.Load(database);
+
+        foreach (var name in package.DialogNames)
+        {
+            var dialog = package.FindDialog(name)!;
+            var rendered = AdvancedInstallerMcp.Render.DialogRenderer.Render(package, dialog, 96, new Dictionary<string, string>());
+
+            using var image = new System.Drawing.Bitmap(new MemoryStream(rendered.Png));
+            image.Width.ShouldBe(Math.Max(1, InstallerUnits.ToPixels(dialog.Width, 96)), name);
+            image.Height.ShouldBe(Math.Max(1, InstallerUnits.ToPixels(dialog.Height, 96)), name);
+        }
+    }
 }

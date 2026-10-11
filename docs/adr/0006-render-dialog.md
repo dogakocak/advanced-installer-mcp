@@ -117,8 +117,13 @@ a second visual language would need its own calibration. Can follow if the measu
 - Tests do not compare against stored PNGs: theme, ClearType and the Windows version change pixels from machine to
   machine. They check structure: the image is the dialog's pixel size, ink appears inside each drawn Text control
   and nowhere a control hides, the clipped fixture label's ink ends where `lint_dialog` says the text ends, a decoded
-  picture lands in its rectangle, a condition picks one of two stacked controls. An opt-in comparison against a real
-  msiexec capture runs behind an environment variable, like `ADVINST_MCP_REAL_MSI`.
+  picture lands in its rectangle, a condition picks one of two stacked controls. The opt-in `ADVINST_MCP_REAL_MSI`
+  test also renders every dialog of the real package. The look itself was compared by eye against the msiexec
+  screenshots in `docs/images` (all 21 dialogs of Advanced Installer 24.0's setup render); an automatic comparison
+  would need a screen capture of msiexec on the test machine and is left out.
+- Found while comparing: a TextStyle colour applies to Text controls only. Advanced Installer's buttons name a white
+  style (`ImageButtonLight`) and still show black labels; a RadioButtonGroup paints its whole rectangle, which shows
+  as a panel on a background picture; a picture button's Text can carry a font prefix before the picture's name.
 - Whether the client shows the image is up to the client; the JSON block carries everything a client without image
   support needs to know what was drawn.
 
