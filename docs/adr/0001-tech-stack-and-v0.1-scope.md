@@ -35,7 +35,7 @@ What we learned:
 | Tool | What it does | Side effects |
 |---|---|---|
 | `lint_dialog` | Reads one dialog's `Dialog` / `Control` / `ControlEvent` / `ControlCondition` rows from an MSI and checks bounds, overlaps, the tab chain and whether every static text fits, **measured with the real font** | none (read-only) |
-| `render_dialog` | Draws an approximate PNG of the dialog from the same rows, without installing anything | temporary PNG |
+| `render_dialog` | Draws an approximate PNG of the dialog from the same rows, without installing anything | ~~temporary PNG~~ PNG returned in the result, written to disk only when asked *(amended 2026-10-12, ADR 0006)* |
 | `build` | Runs `AdvancedInstaller.com /build <aip> [-buildslist …]` and returns a structured result: MSI paths, errors, and `AI_ICE*` noise kept apart. ~~An optional project-specific verification script can be passed in~~ *(amended 2026-10-12, ADR 0002: dropped)* | writes the build output folder |
 
 Deferred to v0.2: `install` / `uninstall` (the server owns the log path and masks secrets; it changes the system,
@@ -89,3 +89,4 @@ so it needs its own security design) and `.aip` editing tools (`add_file`, `set_
   `render_dialog`.
 - ADR 0004 (v0.2): security model of `install` (secrets never travel as tool arguments; log masking).
 - ADR 0005: `lint_dialog` layout rules (bounds, overlaps, tab chain, embedded UI).
+- ADR 0006 (added 2026-10-12): `render_dialog` drawing engine, run-time state (ControlCondition) and output.
