@@ -45,6 +45,24 @@ public sealed class BuildOutputParserTests
     }
 
     [Fact]
+    public void Only_the_builds_that_ran_have_a_block()
+    {
+        var output = Parse("one-of-two-up-to-date.txt");
+
+        output.Builds.ShouldBe([new BuildBlock("Brand2", @"C:\Work\Sample-Brand2\Sample.msi")]);
+        output.UpToDate.ShouldBeFalse();
+        output.FinishedSuccessfully.ShouldBeTrue();
+        output.Unrecognized.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Error_block_ends_at_the_finish_line_too()
+    {
+        BuildOutputParser.Parse("Error: Something broke: \r\nC:\\a.txt \r\nBuild finished because an error was encountered.\r\n")
+            .Errors.ShouldBe([@"Something broke: C:\a.txt"]);
+    }
+
+    [Fact]
     public void Up_to_date_has_no_builds_to_report()
     {
         var output = Parse("up-to-date.txt");

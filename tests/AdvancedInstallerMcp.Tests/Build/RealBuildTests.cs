@@ -23,6 +23,6 @@ public sealed class RealBuildTests
         var again = await BuildTool.Build(project!, cancellationToken: TestContext.Current.CancellationToken);
 
         again.Status.ShouldBe(BuildStatus.UpToDate);
-        again.Builds.Select(build => build.Name).ShouldBe(built.Builds.Select(build => build.Name));
+        again.Builds.ShouldBe(built.Builds.Select(build => build with { UpToDate = true }));
     }
 }

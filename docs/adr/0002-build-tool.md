@@ -30,7 +30,8 @@ What a scratch project showed (`/newproject`, `/edit /AddFile`, builds; outputs 
   `Build finished successfully.`. Two builds print one block each.
 - `ERROR: AI_ICE05. …` is printed under `Validating MSI` and the build still succeeds with exit code `0`. The
   baseline project printed six such lines on every clean build.
-- A second `/build` with nothing changed prints `All builds are up to date.`: **no package path at all**.
+- A second `/build` with nothing changed prints `All builds are up to date.`: **no package path at all**. When only
+  some builds are out of date, it prints blocks for those and **nothing at all for the others**.
 - Failures have no common prefix. A missing source file prints `Error: Resources referred by the project are
   missing:` followed by bare path lines; an unknown build prints `Build not found: "X".`. Both exit with
   `0xE0010064`, so only the text tells them apart. A missing `.aip` prints `File not found: "…".` and exits with
@@ -99,7 +100,7 @@ finished …`, blank lines) and drops only those. Everything else is kept and so
   "status": "Succeeded | UpToDate | Failed",
   "exitCode": "0x00000000",
   "exitCodeName": "AI_NO_ERROR | AI_ERROR_EXCEPTION | … | undocumented",
-  "builds": [ { "name": "DefaultBuild", "package": "C:\\Work\\Sample-SetupFiles\\Sample.msi" } ],
+  "builds": [ { "name": "DefaultBuild", "package": "C:\\Work\\Sample-SetupFiles\\Sample.msi", "upToDate": false } ],
   "validation": [ { "build": "DefaultBuild", "code": "AI_ICE05", "severity": "ERROR", "message": "The custom action …" } ],
   "errors": [ "Resources referred by the project are missing: C:\\Work\\hello.txt" ],
   "unrecognized": [],
@@ -113,10 +114,11 @@ successfully.` line. Enum values are written the way `lint_dialog` writes `sever
 output is not returned; an agent asked for a structured result, and the baseline shows raw logs cost context.
 When `unrecognized` is not empty, those lines are returned as they are, capped at 50.
 
-**Up to date has no package path.** In that case `builds` is filled from the `BuildComponent` rows of the `.aip`
-(the build names, or only the requested ones). `package` is resolved only when `PackageFolder` and
-`PackageFileName` use no variables other than `[|AI_AIP_FOLDER]` and `[|AI_AIP_FILENAME]` and a `.msi` or `.exe`
-with that name exists; otherwise it is `null` and the message suggests `rebuild: true`. General path-variable
+**Up-to-date builds have no package path.** After a successful run, every requested build (all of them when none
+are named) that printed no block was up to date; it is listed from the `BuildComponent` rows of the `.aip` with
+`upToDate: true`, so `builds` always has one entry per requested build. Its `package` is resolved only when
+`PackageFolder` and `PackageFileName` use no variables other than `[|AI_AIP_FOLDER]` and `[|AI_AIP_FILENAME]` and
+a `.msi` or `.exe` with that name exists; otherwise it is `null` and `hint` suggests `rebuild: true`. General path-variable
 resolution is out. An agent that has just changed the project always gets `Build required`, so this case mostly
 happens on a repeated call, when the caller already knows the path.
 

@@ -3,7 +3,9 @@ using System.Text.RegularExpressions;
 namespace AdvancedInstallerMcp.Build;
 
 // One "[ Name ]" block of the output. Package is the "Building package:" path.
-public sealed record BuildBlock(string Name, string? Package);
+// UpToDate: the CLI did not build it because nothing changed; it prints nothing for such a build, so the name and
+// package come from the .aip (AipBuilds).
+public sealed record BuildBlock(string Name, string? Package, bool UpToDate = false);
 
 // An "ERROR: AI_ICE05. …" style line: a validator's finding, never a build failure by itself (ADR 0002).
 public sealed record ValidationNote(string? Build, string Code, string Severity, string Message);
@@ -89,7 +91,8 @@ public static partial class BuildOutputParser
             {
                 // "Error: Resources referred by the project are missing:" lists one path per line up to a blank line.
                 var details = new List<string>();
-                while (i + 1 < lines.Count && lines[i + 1].Length > 0)
+                while (i + 1 < lines.Count && lines[i + 1].Length > 0 &&
+                       !lines[i + 1].StartsWith("Build finished", StringComparison.Ordinal))
                 {
                     details.Add(lines[++i]);
                 }

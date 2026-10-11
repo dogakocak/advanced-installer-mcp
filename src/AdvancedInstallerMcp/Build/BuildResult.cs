@@ -38,7 +38,8 @@ public sealed record BuildResult(
         [0xE001006D] = "AI_ERROR_NO_FLOATING_LICENSE",
     };
 
-    // projectBuilds: the .aip's builds, used when the CLI says everything is up to date and prints no paths.
+    // projectBuilds: the builds the call asked for, read from the .aip. The CLI prints a block only for the builds it
+    // ran, so after a successful run every other one of them was up to date.
     public static BuildResult Create(string project, CliRun run, BuildOutput output, IReadOnlyList<BuildBlock> projectBuilds)
     {
         var exitCode = unchecked((uint)run.ExitCode);
@@ -48,7 +49,7 @@ public sealed record BuildResult(
             : output.UpToDate ? BuildStatus.UpToDate
             : BuildStatus.Succeeded;
 
-        var builds = status == BuildStatus.UpToDate && output.Builds.Count == 0 ? projectBuilds : output.Builds;
+        var builds = status == BuildStatus.Failed ? output.Builds : WithUpToDateBuilds(output.Builds, projectBuilds);
 
         var unrecognized = output.Unrecognized
             .Concat(run.StandardError.Split('\n').Select(line => line.Trim()).Where(line => line.Length > 0))
@@ -59,7 +60,7 @@ public sealed record BuildResult(
             unrecognized = [.. unrecognized.Take(MaxUnrecognized), $"… {hidden} more lines not shown"];
         }
 
-        var hint = status == BuildStatus.UpToDate && builds.Any(build => build.Package is null)
+        var hint = builds.Any(build => build.UpToDate && build.Package is null)
             ? "The project was already built and its package path could not be worked out. Pass rebuild: true to get it."
             : null;
 
@@ -74,5 +75,16 @@ public sealed record BuildResult(
             unrecognized,
             run.TimedOut,
             hint);
+    }
+
+    // In the project's build order: the block the output printed, or the project's own row marked up to date.
+    private static List<BuildBlock> WithUpToDateBuilds(IReadOnlyList<BuildBlock> built, IReadOnlyList<BuildBlock> projectBuilds)
+    {
+        var merged = projectBuilds
+            .Select(build => built.FirstOrDefault(b => string.Equals(b.Name, build.Name, StringComparison.OrdinalIgnoreCase))
+                ?? build with { UpToDate = true })
+            .ToList();
+        merged.AddRange(built.Where(b => !merged.Contains(b)));
+        return merged;
     }
 }

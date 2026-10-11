@@ -79,9 +79,7 @@ public static class BuildTool
             OneBuild.Release();
         }
 
-        var output = BuildOutputParser.Parse(run.StandardOutput);
-        var projectBuilds = output.UpToDate ? ProjectBuilds(project, builds) : [];
-        return BuildResult.Create(project, run, output, projectBuilds);
+        return BuildResult.Create(project, run, BuildOutputParser.Parse(run.StandardOutput), ProjectBuilds(project, builds));
     }
 
     private static IReadOnlyList<BuildBlock> ProjectBuilds(string project, string[]? requested)

@@ -30,8 +30,35 @@ public sealed class BuildResultTests
         var result = BuildResult.Create(Project, new CliRun(0, "", "", false), output, fromProject);
 
         result.Status.ShouldBe(BuildStatus.UpToDate);
-        result.Builds.ShouldBe(fromProject);
+        result.Builds.ShouldBe([fromProject[0] with { UpToDate = true }]);
         result.Hint.ShouldBeNull();
+    }
+
+    // The CLI prints a block only for the builds it ran; the others were up to date and are not mentioned at all.
+    [Fact]
+    public void Builds_the_output_does_not_mention_were_up_to_date()
+    {
+        BuildBlock[] fromProject =
+        [
+            new("DefaultBuild", @"C:\Work\Sample-SetupFiles\Sample.msi"),
+            new("Brand2", @"C:\Work\Sample-Brand2\Sample.msi"),
+        ];
+        var output = Output() with { Builds = [new BuildBlock("Brand2", @"C:\Work\Sample-Brand2\Sample.msi")] };
+
+        var result = BuildResult.Create(Project, new CliRun(0, "", "", false), output, fromProject);
+
+        result.Status.ShouldBe(BuildStatus.Succeeded);
+        result.Builds.ShouldBe([
+            new BuildBlock("DefaultBuild", @"C:\Work\Sample-SetupFiles\Sample.msi", UpToDate: true),
+            new BuildBlock("Brand2", @"C:\Work\Sample-Brand2\Sample.msi"),
+        ]);
+    }
+
+    [Fact]
+    public void A_failed_build_lists_only_what_the_output_shows()
+    {
+        BuildResult.Create(Project, new CliRun(0, "", "", false), Output(finished: false), [new("Other", null)])
+            .Builds.Select(build => build.Name).ShouldBe(["DefaultBuild"]);
     }
 
     [Fact]
