@@ -78,6 +78,9 @@ public sealed class DialogPackage
             return [];
         }
 
+        var textFromEvent = TextEventSubscribers(dialogName);
+        var shownByCondition = ShownByCondition(dialogName);
+
         return _database.Query(
             "SELECT `Control`, `Type`, `X`, `Y`, `Width`, `Height`, `Attributes`, `Property`, `Text`, `Control_Next` " +
             "FROM `Control` WHERE `Dialog_` = ?",
@@ -91,9 +94,28 @@ public sealed class DialogPackage
                 r.GetInteger(7) ?? 0,
                 NullIfEmpty(r.GetString(8)),
                 r.GetString(9),
-                NullIfEmpty(r.GetString(10))),
+                NullIfEmpty(r.GetString(10)),
+                textFromEvent.Contains(r.GetString(1)),
+                shownByCondition.Contains(r.GetString(1))),
             dialogName);
     }
+
+    // Controls whose Text an EventMapping row replaces at run time (SelectionDescription, ActionText, ...).
+    private HashSet<string> TextEventSubscribers(string dialogName) =>
+        HasTable(_database, "EventMapping")
+            ? _database.Query(
+                    "SELECT `Control_` FROM `EventMapping` WHERE `Dialog_` = ? AND `Attribute` = 'Text'",
+                    r => r.GetString(1), dialogName)
+                .ToHashSet(StringComparer.Ordinal)
+            : [];
+
+    private HashSet<string> ShownByCondition(string dialogName) =>
+        HasTable(_database, "ControlCondition")
+            ? _database.Query(
+                    "SELECT `Control_` FROM `ControlCondition` WHERE `Dialog_` = ? AND `Action` = 'Show'",
+                    r => r.GetString(1), dialogName)
+                .ToHashSet(StringComparer.Ordinal)
+            : [];
 
     private static bool HasTable(MsiDatabase database, string table) =>
         database.Query("SELECT `Name` FROM `_Tables` WHERE `Name` = ?", r => r.GetString(1), table).Count > 0;

@@ -25,6 +25,16 @@ claude mcp add advinst -- "%LOCALAPPDATA%\advinst-mcp\AdvancedInstallerMcp.exe"
   next `dotnet build`. Publish again (with the session closed) to update the registered server.
 - Not `dotnet run`: build output on stdout would corrupt the stdio protocol.
 
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `lint_dialog` | Reads the setup dialogs of a built `.msi` (no install) and reports labels of Text, CheckBox and PushButton controls that do not fit, measured with the package's own font as Windows draws it, at 100, 125 and 150 % scaling. Each finding gives the smallest size in installer units that fits. Pass `dialog` to check one dialog. |
+| `ping` | Checks that the server runs. |
+
+How the measurement works and where its numbers come from: [ADR 0003](docs/adr/0003-installer-units-and-text-measurement.md)
+and the [control calibration](docs/research/2026-10-11-control-calibration.md).
+
 ## Tests
 
 ```

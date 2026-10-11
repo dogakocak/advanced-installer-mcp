@@ -10,6 +10,8 @@ public sealed class TestPackage : IDisposable
     private readonly List<object?[]> _textStyles = [];
     private readonly List<object?[]> _dialogs = [];
     private readonly List<object?[]> _controls = [];
+    private readonly List<object?[]> _eventMappings = [];
+    private readonly List<object?[]> _controlConditions = [];
     private bool _withUiTables = true;
 
     public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"advinst-mcp-{Guid.NewGuid():N}.msi");
@@ -43,6 +45,19 @@ public sealed class TestPackage : IDisposable
         string? text = null, int attributes = 3, string? property = null, string? next = null)
     {
         _controls.Add([dialog, name, type, x, y, width, height, attributes, property, text, next, null]);
+        return this;
+    }
+
+    // Only packages with at least one row get an EventMapping table, so the reader is tested without one too.
+    public TestPackage WithEventMapping(string dialog, string control, string @event, string attribute)
+    {
+        _eventMappings.Add([dialog, control, @event, attribute]);
+        return this;
+    }
+
+    public TestPackage WithControlCondition(string dialog, string control, string action, string condition)
+    {
+        _controlConditions.Add([dialog, control, action, condition]);
         return this;
     }
 
@@ -101,6 +116,30 @@ public sealed class TestPackage : IDisposable
             database.Execute(
                 "INSERT INTO `Control` (`Dialog_`, `Control`, `Type`, `X`, `Y`, `Width`, `Height`, `Attributes`, `Property`, " +
                 "`Text`, `Control_Next`, `Help`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", row);
+        }
+
+        if (_controlConditions.Count > 0)
+        {
+            database.Execute(
+                "CREATE TABLE `ControlCondition` (`Dialog_` CHAR(72) NOT NULL, `Control_` CHAR(50) NOT NULL, " +
+                "`Action` CHAR(50) NOT NULL, `Condition` CHAR(255) NOT NULL PRIMARY KEY `Dialog_`, `Control_`, `Action`, `Condition`)");
+            foreach (var row in _controlConditions)
+            {
+                database.Execute(
+                    "INSERT INTO `ControlCondition` (`Dialog_`, `Control_`, `Action`, `Condition`) VALUES (?, ?, ?, ?)", row);
+            }
+        }
+
+        if (_eventMappings.Count > 0)
+        {
+            database.Execute(
+                "CREATE TABLE `EventMapping` (`Dialog_` CHAR(72) NOT NULL, `Control_` CHAR(50) NOT NULL, " +
+                "`Event` CHAR(50) NOT NULL, `Attribute` CHAR(50) NOT NULL PRIMARY KEY `Dialog_`, `Control_`, `Event`)");
+            foreach (var row in _eventMappings)
+            {
+                database.Execute(
+                    "INSERT INTO `EventMapping` (`Dialog_`, `Control_`, `Event`, `Attribute`) VALUES (?, ?, ?, ?)", row);
+            }
         }
     }
 }

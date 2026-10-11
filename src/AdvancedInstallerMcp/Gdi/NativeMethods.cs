@@ -19,6 +19,10 @@ internal static partial class NativeMethods
     public const uint DtCalcRect = 0x00000400;
     public const uint DtNoPrefix = 0x00000800;
 
+    // TEXTMETRIC.tmPitchAndFamily: neither bit set means a raster (bitmap) font.
+    public const byte TmpfVector = 0x02;
+    public const byte TmpfTrueType = 0x04;
+
     // LF_FACESIZE: face names are at most 31 characters plus the terminating null.
     public const int FaceSize = 32;
 

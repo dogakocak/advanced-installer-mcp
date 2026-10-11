@@ -13,7 +13,9 @@ public enum MeasureOptions
 
 // Pixels the text takes up. LineHeight is the step between lines, so Height / LineHeight is the line count.
 // FaceName is the font GDI actually used; FaceSubstituted means the requested face is not installed here.
-public sealed record TextMeasurement(int Width, int Height, int LineHeight, string FaceName, bool FaceSubstituted);
+// Raster: a bitmap font (e.g. MS Sans Serif), which comes in a few fixed sizes and does not scale smoothly with DPI.
+public sealed record TextMeasurement(
+    int Width, int Height, int LineHeight, string FaceName, bool FaceSubstituted, bool Raster = false);
 
 // ADR 0003: measures text the way a STATIC control lays it out, with GDI DrawText on a memory DC. No verdicts here;
 // whether a size fits a control is lint_dialog's call.
@@ -42,7 +44,8 @@ public static class TextMeasurer
 
             return new TextMeasurement(
                 width, height, lineHeight, faceName,
-                !string.Equals(faceName, font.FaceName, StringComparison.OrdinalIgnoreCase));
+                !string.Equals(faceName, font.FaceName, StringComparison.OrdinalIgnoreCase),
+                (metric.PitchAndFamily & (NativeMethods.TmpfVector | NativeMethods.TmpfTrueType)) == 0);
         }
         finally
         {

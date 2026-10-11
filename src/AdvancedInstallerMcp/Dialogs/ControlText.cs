@@ -5,7 +5,7 @@ namespace AdvancedInstallerMcp.Dialogs;
 // A control's Text split into its font style and the text the user sees.
 //   "{\DlgFont8}Hello"                       -> style DlgFont8
 //   "[DlgTitleFont]Welcome" with DlgTitleFont = "{&DlgFontBold8}"  -> style DlgFontBold8
-// HasRuntimeText: the visible text still contains [Property] references, so its length is only a lower bound.
+// HasRuntimeText: the visible text still contains [Property] references (FormattedText resolves them).
 public sealed partial record ControlText(string? StyleName, string DisplayText, bool HasRuntimeText)
 {
     public static ControlText Parse(string text, IReadOnlyDictionary<string, string> properties)

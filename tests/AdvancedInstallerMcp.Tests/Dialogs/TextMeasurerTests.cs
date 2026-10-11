@@ -113,6 +113,15 @@ public sealed class TextMeasurerTests
     }
 
     [Fact]
+    public void Bitmap_fonts_are_flagged_as_raster()
+    {
+        var msSansSerif = Tahoma8 with { FaceName = "MS Sans Serif" };
+
+        TextMeasurer.Measure("x", msSansSerif, 96, 1000, MeasureOptions.None).Raster.ShouldBeTrue();
+        TextMeasurer.Measure("x", Tahoma8, 96, 1000, MeasureOptions.None).Raster.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Empty_text_takes_no_space()
     {
         var measured = TextMeasurer.Measure("", Tahoma8, 96, 307, MeasureOptions.None);

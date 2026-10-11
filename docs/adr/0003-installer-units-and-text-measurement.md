@@ -41,14 +41,16 @@ Measurement on this machine (plain `DrawText` with word break on a memory DC; fo
 
 What this shows:
 
-- With a 13 px line (Tahoma 8 or MS Sans Serif 8), two lines need 26 px: an 18-unit control (24 px) cuts the second
-  line, a 20-unit control (27 px) shows both. The baseline UI runs fixed a clipped label by exactly that change
+- With a 13 px line (Tahoma 8 or MS Sans Serif 8), two lines need 26 px: an 18-unit control (24 px) shows only the
+  first line, ending in "...", a 20-unit control (27 px) shows both (confirmed in msiexec, see
+  `docs/research/2026-10-11-control-calibration.md`). The baseline UI runs fixed a clipped label by exactly that change
   (height 18 → 20). With Segoe UI 9 (15 px line) both heights would clip, so that fix working is consistent with a
   13 px font in that project. To be confirmed by reading `DefaultUIFont` and `TextStyle` from a real MSI once the
   reader exists.
 - Text width does not scale linearly with DPI: the same hint uses 85 % of the line at 96 DPI and 99 % at 120 DPI
-  (2 px to spare), and the 20-unit control has 1 px of height to spare at 120 DPI. A check at 100 % alone would miss controls that are tight at
-  125 %.
+  (2 px to spare), and the 20-unit control has 1 px of height to spare at 120 DPI. Line height does not either:
+  Segoe UI 9 pt is 15 px a line at 96 DPI but 20 px at 120 DPI. A check at 100 % alone would miss controls that are
+  tight at 125 %.
 
 ## Decision
 
@@ -66,10 +68,12 @@ What this shows:
   case measurement falls back to Segoe UI 9 pt and the verdict is marked approximate, naming the font actually used.
   This fallback is our choice, not a claim about what msiexec does.
 - A face that is not installed on the machine running the server is **not** replaced by that fallback. `CreateFontW`
-  never fails for an unknown face; GDI substitutes one (font mapper, `FontSubstitutes`, e.g. `MS Sans Serif` →
-  `Microsoft Sans Serif`), and msiexec on the same machine goes through the same substitution. So we keep GDI's
+  never fails for an unknown face; GDI substitutes one (font mapper, `FontSubstitutes`), and msiexec on the same
+  machine goes through the same substitution. So we keep GDI's
   choice, read its name back with `GetTextFaceW`, and mark the verdict approximate with that name. *(Amended
   2026-10-11 while implementing: the first version used Segoe UI 9 here too, which predicts the real dialog worse.)*
+- A bitmap (raster) face such as `MS Sans Serif` comes in a few sizes made for 96 DPI. A verdict that fails only at
+  120 or 144 DPI with such a face is marked approximate.
 
 ### Measurement
 
@@ -79,15 +83,25 @@ What this shows:
 - Flags follow the control's attributes: `DT_CALCRECT`, plus `DT_WORDBREAK` unless `NoWrap`, `DT_NOPREFIX` only with
   `NoPrefix`, `DT_RIGHT` with `RightAligned`. `Sunken` reduces the usable area by the border width.
 - Per control type, v0.1:
-  - `Text`: wrapping → fits if the wrapped height ≤ the control height; `NoWrap` → fits if the width ≤ the control
-    width (otherwise the user sees "...").
-  - `CheckBox` / `RadioButton`: one line; text width + box + gap ≤ control width.
-  - `PushButton`: one line, centred; text width + side margins ≤ control width.
-  - Box, gap and button margins are calibrated once against a real screenshot and kept as constants with that
-    source in a comment. Other control types are not measured in v0.1.
-- Text containing `[Property]` references is measured as written, and the verdict says it is a **lower bound**: the
-  real text is at least that long unless the property is empty. Resolving values from the `Property` table is left
-  for later.
+  - `Text`: wrapping → fits if the wrapped height ≤ the control height and no word is wider than the control;
+    `NoWrap` → fits if the width ≤ the control width (otherwise the user sees "...").
+  - `CheckBox`: the label wraps inside the width left of the box (control width − 16 px at 96 DPI) and fits if the
+    wrapped height ≤ the control height. *(Amended 2026-10-11: the first version said "one line"; msiexec wraps
+    check box labels, which matters for tall check boxes with two-line labels.)*
+  - `PushButton`: one line, centred; text width + 6 px ≤ control width.
+  - The 16 px and 6 px come from a calibration against msiexec at 96 DPI
+    (`docs/research/2026-10-11-control-calibration.md`, `tools/calibration/calibrate-controls.ps1`) and scale
+    linearly with DPI. `RadioButton` items live in the `RadioButton` table and are not measured in v0.1, nor are
+    other control types.
+- Not measured, because their text is not what the user sees: controls whose `Text` an `EventMapping` row sets at
+  run time (feature descriptions, progress text); zero-sized controls; controls without `Visible` that no
+  `ControlCondition` row shows; check boxes no wider than their box (the label is a separate Text control);
+  `Indirect` controls; buttons and check boxes with `Bitmap`, `Icon`, `PushLike` or `ElevationShield`.
+- `[Property]` references are replaced by their value from the `Property` table. A reference without a value there
+  (set at run time, `[#file]`, `[%ENV]`, or a value that is itself formatted) counts as empty, and the verdict says it
+  is a **lower bound**. *(Amended 2026-10-11: the first version measured references as written, which is not a lower
+  bound: `[ButtonText_Cancel]` is longer than "Cancel", and lint reported every standard Cancel button of real
+  packages as clipped.)*
 - `render_dialog` draws text through the same GDI path, so the picture and the lint verdict cannot disagree.
 
 ## Alternatives considered
@@ -105,13 +119,13 @@ What this shows:
 
 ## Consequences
 
-- First `lint_dialog` tests (fixture `.aip`): a 230×18 Text control with a two-line Tahoma 8 pt hint must be
-  reported clipped, its 230×20 twin must pass at all three DPIs, the 24-char checkbox label in 125×12 must pass, a
-  `NoWrap` control with an over-long label must be reported, and a `[ProductName]` text must come back marked as a
-  lower bound.
+- First `lint_dialog` tests (generated fixture packages, see ADR 0001): a 230×18 Text control with a two-line
+  Tahoma 8 pt hint must be reported clipped, its 230×20 twin must pass at all three DPIs, the 24-char checkbox label
+  in 125×12 must pass, a `NoWrap` control with an over-long label must be reported, and a text with a `[Property]`
+  reference that has no value must come back marked as a lower bound.
 - Results depend on the fonts installed on the machine running the server: normally the same machine the installer
   is tested on. The result always names the font it used.
-- Check box, radio and button margins are calibrated, not documented. If a Windows version changes them, only those
+- Check box and button margins are calibrated, not documented. If a Windows version changes them, only those
   constants move.
 
 ## Sources
