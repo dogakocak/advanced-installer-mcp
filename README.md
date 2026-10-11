@@ -50,7 +50,9 @@ up exactly as predicted when msiexec draws the dialogs at 100 % scaling:
 | `UserExit` / `ProductNameTitle` | Segoe UI 20 pt bold wraps to 2 lines in a 1-line area; Windows shows 1 line ending in "...". Fits at height 56 (now 32). | ![UserExit title cut to "Advanced Installer 24.0 Setup was I..."](docs/images/advinst-24-userexit-clipped.png) |
 | `UpgradeDlg` / `QuestionReplace` | Wraps to 3 lines, 60 px, in a 59 px area; Windows shows 2 lines ending in "...". Fits at height 45 (now 44). | ![UpgradeDlg question cut to "Do you also want to re..."](docs/images/advinst-24-upgradedlg-clipped.png) |
 
-In the same dialogs, the labels that fit (the `Question` text, "Install Advanced Installer?") were not reported.
+In the same dialogs, the labels that fit (the `Question` text, "Install Advanced Installer?") were not reported. The
+full report also has the `embedded-ui` warning described below and two overlap warnings for controls that a condition
+shows.
 
 We did not check how the embedded UI shows these texts. To capture the fallback dialogs we ran a copy of the package
 with the embedded UI, custom actions and install sequence removed, so that msiexec showed only these two dialogs and

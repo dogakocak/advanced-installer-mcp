@@ -105,6 +105,10 @@ run time.
   overlap warnings, 13 `not-in-tab-order` warnings in 5 packages, no bounds findings and the `embedded-ui` warning
   once. Before the painted-area model: 3,248 overlap errors and 81 bounds errors.
 - Bounds and overlaps need the package's fonts, like the text check; the tab chain does not.
+- Known false positive: a small button drawn on the edge of a bigger one on purpose, like the drop-down arrow of a
+  split button (`CustomInstallBtn` on `Next` in Advanced Installer 24.0's `WelcomeDlg`). It is a Warning there
+  because a condition shows it; an exemption for a button entirely inside another button can follow if it shows up
+  unconditioned.
 - Two controls with conditions that do not actually exclude each other are missed. A condition evaluator could
   close that gap later.
 - Visual tab order (top to bottom, left to right) is not checked; it is a matter of taste more often than a bug.
