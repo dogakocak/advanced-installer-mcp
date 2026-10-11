@@ -23,7 +23,8 @@ and "Command line return codes"):
 - `AI_ICE01`–`AI_ICE07` are Caphyon's own best-practice validators (SelfReg, TypeLib, script custom actions, custom
   action only in the UI sequence, non-public or default-less dialog properties).
 
-What a scratch project showed (`/newproject`, `/edit /AddFile`, builds; outputs in `tests/Fixtures/BuildOutput`):
+What a scratch project showed (`/newproject`, `/edit /AddFile`, builds; outputs in
+`tests/AdvancedInstallerMcp.Tests/Fixtures/BuildOutput`):
 
 - Success prints `[ BuildName ]`, then `Building package: <full path>`, a fixed list of progress lines, and
   `Build finished successfully.`. Two builds print one block each.
@@ -84,7 +85,7 @@ finished …`, blank lines) and drops only those. Everything else is kept and so
 
 - `[ Name ]` starts a build; `Building package: <path>` gives its package.
 - `ERROR:` or `WARNING:` followed by `AI_ICE` or `ICE` and a number is a **validation note**: code, the printed
-  severity, message, and the build it belongs to. Notes never make the result `failed`; the exit code and the
+  severity, message, and the build it belongs to. Notes never make the result `Failed`; the exit code and the
   failure lines decide that.
 - `Error: …` and the non-blank lines after it, `Build not found: …`, `File not found: …` are **errors**.
 - Any other line goes to `unrecognized`, so a message from a newer Advanced Installer or from a case we have not
@@ -95,18 +96,20 @@ finished …`, blank lines) and drops only those. Everything else is kept and so
 ```json
 {
   "project": "C:\\Work\\Sample.aip",
-  "status": "succeeded | upToDate | failed",
+  "status": "Succeeded | UpToDate | Failed",
   "exitCode": "0x00000000",
   "exitCodeName": "AI_NO_ERROR | AI_ERROR_EXCEPTION | … | undocumented",
-  "builds": [ { "name": "DefaultBuild", "package": "C:\\Work\\Sample-SetupFiles\\Sample.msi", "buildTime": "1 sec." } ],
+  "builds": [ { "name": "DefaultBuild", "package": "C:\\Work\\Sample-SetupFiles\\Sample.msi" } ],
   "validation": [ { "build": "DefaultBuild", "code": "AI_ICE05", "severity": "ERROR", "message": "The custom action …" } ],
   "errors": [ "Resources referred by the project are missing: C:\\Work\\hello.txt" ],
   "unrecognized": [],
-  "timedOut": false
+  "timedOut": false,
+  "hint": "only when up to date and a package path could not be worked out: pass rebuild: true"
 }
 ```
 
-`status` is `failed` when the exit code is not 0 or the last line is not `Build finished successfully.`. The full
+`status` is `Failed` when the build timed out, the exit code is not 0 or the output has no `Build finished
+successfully.` line. Enum values are written the way `lint_dialog` writes `severity`. The full
 output is not returned; an agent asked for a structured result, and the baseline shows raw logs cost context.
 When `unrecognized` is not empty, those lines are returned as they are, capped at 50.
 
@@ -139,10 +142,10 @@ happens on a repeated call, when the caller already knows the path.
 
 ## Consequences
 
-- The parser is tested without Advanced Installer, against the captured outputs in `tests/Fixtures/BuildOutput`
-  (success, up to date, missing resource, unknown build, two builds with `AI_ICE05`, non-ASCII path, missing
-  project). An opt-in test behind `ADVINST_MCP_REAL_AIP` runs a real build, like `ADVINST_MCP_REAL_MSI` for the MSI
-  reader.
+- The parser is tested without Advanced Installer, against the captured outputs in
+  `tests/AdvancedInstallerMcp.Tests/Fixtures/BuildOutput` (success, up to date, missing resource, unknown build, two
+  builds with `AI_ICE05`, non-ASCII path, missing project). An opt-in test behind `ADVINST_MCP_REAL_AIP` runs a real
+  build, like `ADVINST_MCP_REAL_MSI` for the MSI reader.
 - The returned `package` path is what `lint_dialog` takes, so "build, then lint" needs no path guessing.
 - License failures (`0xE001006C`, `0xE001006D`) are reported by name, so the caller can tell "fix the project" from
   "fix the machine".
@@ -150,6 +153,6 @@ happens on a repeated call, when the caller already knows the path.
 ## Open points
 
 - What a failing Microsoft ICE (for example ICE43, ICE57) prints, and whether it fails the build, was not seen. The
-  parser already treats `ICE` lines as validation notes; the build's exit code decides `failed`.
+  parser already treats `ICE` lines as validation notes; the build's exit code decides `Failed`.
 - Output of digital signing, prerequisites and EXE bootstrapper builds was not captured. New lines will show up in
   `unrecognized` first and become known lines when seen.
