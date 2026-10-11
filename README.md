@@ -35,10 +35,14 @@ claude mcp add advinst -- "%LOCALAPPDATA%\advinst-mcp\AdvancedInstallerMcp.exe"
 How the measurement works and where its numbers come from: [ADR 0003](docs/adr/0003-installer-units-and-text-measurement.md)
 and the [control calibration](docs/research/2026-10-11-control-calibration.md).
 
-## Example: clipped labels in Advanced Installer's own setup
+## Example: hidden clipped labels in a fallback UI
 
-`lint_dialog` on the setup package of Advanced Installer 24.0 checked 21 dialogs and reported two clipped labels.
-Both show up exactly as predicted when msiexec draws the dialogs at 100 % scaling:
+The setup package of Advanced Installer 24.0 has two UIs. Normally it shows its own embedded UI (`MsiEmbeddedUI`).
+It also carries classic Windows Installer dialogs, which msiexec draws only when the embedded UI does not run. Users
+rarely see those fallback dialogs, so a clipped label there is easy to miss in manual testing.
+
+`lint_dialog` checked the 21 fallback dialogs without installing anything and reported two clipped labels. Both show
+up exactly as predicted when msiexec draws the dialogs at 100 % scaling:
 
 | Control | `lint_dialog` | msiexec |
 |---|---|---|
@@ -47,9 +51,10 @@ Both show up exactly as predicted when msiexec draws the dialogs at 100 % scalin
 
 In the same dialogs, the labels that fit (the `Question` text, "Install Advanced Installer?") were not reported.
 
-The installed package normally shows its own embedded UI (`MsiEmbeddedUI`), so most users do not see these Windows
-Installer dialogs. To capture them we ran a copy of the package with the embedded UI, custom actions and install
-sequence removed, so that msiexec showed only these two dialogs and installed nothing.
+We did not check how the embedded UI shows these texts. To capture the fallback dialogs we ran a copy of the package
+with the embedded UI, custom actions and install sequence removed, so that msiexec showed only these two dialogs and
+installed nothing. Packages without an embedded UI show their classic dialogs to every user, so there a clipped label
+is seen by everyone who reaches that dialog.
 
 ## Tests
 
