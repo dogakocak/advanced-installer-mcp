@@ -1,0 +1,20 @@
+ 
+Checking builds status 
+Build required. 
+ 
+
+[ DefaultBuild ] 
+Building package: C:\Work\Sample-SetupFiles\Sample.msi 
+Prepare build 
+Detecting MSI incompatible resources 
+Preparing files 
+Creating CAB file(s) 
+Preparing binaries 
+Creating MSI database 
+Inserting CAB file(s) into MSI 
+Writing Summary Information 
+Validating MSI 
+ 
+Total build time: 1 sec.
+ 
+Build finished successfully.

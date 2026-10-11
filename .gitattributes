@@ -1,0 +1,2 @@
+# Captured AdvancedInstaller.com output: keep the exact bytes (CRLF, UTF-8, trailing spaces).
+tests/Fixtures/BuildOutput/*.txt -text

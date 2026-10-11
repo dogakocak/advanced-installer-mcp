@@ -1,0 +1,38 @@
+ 
+Checking builds status 
+Build required. 
+ 
+
+[ DefaultBuild ] 
+Building package: C:\Work\Sample-SetupFiles\Sample.msi 
+Prepare build 
+Detecting MSI incompatible resources 
+Preparing files 
+Reusing archives from cache 
+Preparing binaries 
+Creating MSI database 
+Inserting CAB file(s) into MSI 
+Writing Summary Information 
+Validating MSI 
+ERROR: AI_ICE05. The custom action 'UiOnlySet' was scheduled only in 'InstallUISequence' table. It will not be executed during an un-attended installation. 
+ 
+Build time: 1 sec. 
+
+[ Brand2 ] 
+Building package: C:\Work\Sample-Brand2\Sample.msi 
+Prepare build 
+Detecting MSI incompatible resources 
+Preparing files 
+Reusing archives from cache 
+Preparing binaries 
+Creating MSI database 
+Inserting CAB file(s) into MSI 
+Writing Summary Information 
+Validating MSI 
+ERROR: AI_ICE05. The custom action 'UiOnlySet' was scheduled only in 'InstallUISequence' table. It will not be executed during an un-attended installation. 
+ 
+Build time: 1 sec. 
+ 
+Total build time: 2 sec.
+ 
+Build finished successfully.
