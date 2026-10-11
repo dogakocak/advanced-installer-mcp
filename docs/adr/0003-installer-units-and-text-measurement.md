@@ -29,15 +29,15 @@ What the documentation says:
 - `Text` is a formatted string: `[ProductName]` and other properties are replaced at run time, so the string in the
   table is not always the string on screen.
 
-Measurement on this machine (`DrawText` with word break and no padding, through `TextRenderer`; font em height
+Measurement on this machine (plain `DrawText` with word break on a memory DC; font em height
 `round(points × dpi / 72)`; the sentence is a made-up 79-char hint, the label is 24 chars):
 
 | DPI | Font | Line | 79-char hint in a 230-unit wide control | 18 / 20 units high | 24-char label vs. 125 units |
 |---|---|---|---|---|---|
-| 96 | Tahoma 8 pt | 13 px | 2 lines, 267 of 307 px wide, 26 px high | 24 / 27 px | 117 of 167 px |
-| 96 | Segoe UI 9 pt | 15 px | 2 lines, 30 px high | 24 / 27 px | 122 of 167 px |
-| 120 | Tahoma 8 pt | 16 px | 2 lines, **379 of 383 px** wide, 32 px high | 30 / 33 px | 137 of 208 px |
-| 144 | Tahoma 8 pt | 19 px | 2 lines, 38 px high | 36 / 40 px | 166 of 250 px |
+| 96 | Tahoma 8 pt | 13 px | 2 lines, 260 of 307 px wide, 26 px high | 24 / 27 px | 110 of 167 px |
+| 96 | Segoe UI 9 pt | 15 px | 2 lines, 275 of 307 px wide, 30 px high | 24 / 27 px | 115 of 167 px |
+| 120 | Tahoma 8 pt | 16 px | 2 lines, **381 of 383 px** wide, 32 px high | 30 / 33 px | 130 of 208 px |
+| 144 | Tahoma 8 pt | 19 px | 2 lines, 457 of 460 px wide, 38 px high | 36 / 40 px | 157 of 250 px |
 
 What this shows:
 
@@ -46,8 +46,8 @@ What this shows:
   (height 18 → 20). With Segoe UI 9 (15 px line) both heights would clip, so that fix working is consistent with a
   13 px font in that project. To be confirmed by reading `DefaultUIFont` and `TextStyle` from a real MSI once the
   reader exists.
-- Text width does not scale linearly with DPI: the same hint uses 87 % of the line at 96 DPI and 99 % at 120 DPI,
-  and the 20-unit control has 1 px to spare at 120 DPI. A check at 100 % alone would miss controls that are tight at
+- Text width does not scale linearly with DPI: the same hint uses 85 % of the line at 96 DPI and 99 % at 120 DPI
+  (2 px to spare), and the 20-unit control has 1 px of height to spare at 120 DPI. A check at 100 % alone would miss controls that are tight at
   125 %.
 
 ## Decision
@@ -63,9 +63,13 @@ What this shows:
 - Resolved from the MSI: the `{\style}` / `{&style}` prefix of the control's `Text`, otherwise `DefaultUIFont`,
   looked up in `TextStyle`; `StyleBits` gives bold, italic, underline and strike-out.
 - A missing `DefaultUIFont` is a **finding of its own**, since Microsoft says every UI package should set it. In that
-  case, or when the face is not installed on the machine running the server, measurement falls back to Segoe UI 9 pt
-  and the verdict is marked approximate, naming the font actually used. This fallback is our choice, not a claim
-  about what msiexec does.
+  case measurement falls back to Segoe UI 9 pt and the verdict is marked approximate, naming the font actually used.
+  This fallback is our choice, not a claim about what msiexec does.
+- A face that is not installed on the machine running the server is **not** replaced by that fallback. `CreateFontW`
+  never fails for an unknown face; GDI substitutes one (font mapper, `FontSubstitutes`, e.g. `MS Sans Serif` →
+  `Microsoft Sans Serif`), and msiexec on the same machine goes through the same substitution. So we keep GDI's
+  choice, read its name back with `GetTextFaceW`, and mark the verdict approximate with that name. *(Amended
+  2026-10-11 while implementing: the first version used Segoe UI 9 here too, which predicts the real dialog worse.)*
 
 ### Measurement
 
@@ -88,8 +92,10 @@ What this shows:
 
 ## Alternatives considered
 
-- **`TextRenderer.MeasureText` (WinForms):** the same `DrawText` underneath and used for the measurement above, but
-  it pulls in WinForms (`UseWindowsForms`) for one call.
+- **`TextRenderer.MeasureText` (WinForms):** the same `DrawText` underneath, but it pulls in WinForms
+  (`UseWindowsForms`) for one call, and the overload without an `IDeviceContext` ignores `NoPadding`: it adds the
+  glyph-overhang padding (7 px for Tahoma 8 at 96 DPI) to every width. The first version of the table above was
+  measured that way and its widths were 7 px too wide; corrected 2026-10-11, heights were unaffected.
 - **`Graphics.MeasureString` (GDI+):** a different layout engine that adds its own padding; it does not predict a
   STATIC control.
 - **Characters × average width:** what an agent does without the server. Fine as a hint, not as a verdict near the
