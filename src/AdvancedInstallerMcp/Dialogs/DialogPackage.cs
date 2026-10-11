@@ -97,6 +97,20 @@ public sealed class DialogPackage
         return _radioButtons[property].ToList();
     }
 
+    // The Binary row's data (a picture for a Bitmap or Icon control), or null when there is no such row.
+    public byte[]? ReadBinary(string name) =>
+        HasTable(_database, "Binary")
+            ? _database.Query("SELECT `Data` FROM `Binary` WHERE `Name` = ?", r => r.ReadStream(1), name).SingleOrDefault()
+            : null;
+
+    // The dialog's ControlCondition rows: Show, Hide, Enable, Disable or Default when the condition is true.
+    public IReadOnlyList<ControlConditionRow> ControlConditions(string dialogName) =>
+        HasTable(_database, "ControlCondition")
+            ? _database.Query(
+                "SELECT `Control_`, `Action`, `Condition` FROM `ControlCondition` WHERE `Dialog_` = ?",
+                r => new ControlConditionRow(r.GetString(1), r.GetString(2), r.GetString(3)), dialogName)
+            : [];
+
     private IReadOnlyList<Control> ReadControls(string dialogName)
     {
         if (!HasTable(_database, "Control"))

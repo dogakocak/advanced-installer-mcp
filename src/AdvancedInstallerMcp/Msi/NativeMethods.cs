@@ -57,6 +57,14 @@ internal static partial class NativeMethods
     [LibraryImport(Msi)]
     public static partial uint MsiRecordSetInteger(MsiHandle record, uint field, int value);
 
+    // Reads the next chunk of a stream field; length is the buffer size on input, the bytes read on output (0 at the end).
+    [LibraryImport(Msi)]
+    public static partial uint MsiRecordReadStream(MsiHandle record, uint field, [Out] byte[] buffer, ref uint length);
+
+    // Tests only: a stream field can be set only from a file.
+    [LibraryImport(Msi, EntryPoint = "MsiRecordSetStreamW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint MsiRecordSetStream(MsiHandle record, uint field, string filePath);
+
     [LibraryImport(Msi)]
     public static partial uint MsiCloseHandle(uint handle);
 }

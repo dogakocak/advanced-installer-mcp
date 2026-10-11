@@ -14,6 +14,7 @@ public sealed class TestPackage : IDisposable
     private readonly List<object?[]> _controlConditions = [];
     private readonly List<object?[]> _embeddedUi = [];
     private readonly List<object?[]> _radioButtons = [];
+    private readonly List<(string Name, byte[] Data)> _binaries = [];
     private bool _withUiTables = true;
 
     public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"advinst-mcp-{Guid.NewGuid():N}.msi");
@@ -71,6 +72,14 @@ public sealed class TestPackage : IDisposable
         return this;
     }
 
+    // A Binary row (pictures for Bitmap and Icon controls). The stream goes in through a temporary file, the only way
+    // msi.dll accepts one.
+    public TestPackage WithBinary(string name, byte[] data)
+    {
+        _binaries.Add((name, data));
+        return this;
+    }
+
     public TestPackage WithRadioButton(string property, int order, string value, int x, int y, int width, int height,
         string? text = null)
     {
@@ -101,6 +110,24 @@ public sealed class TestPackage : IDisposable
                 foreach (var row in _embeddedUi)
                 {
                     database.Execute("INSERT INTO `MsiEmbeddedUI` (`MsiEmbeddedUI`, `FileName`, `Attributes`) VALUES (?, ?, ?)", row);
+                }
+            }
+
+            if (_binaries.Count > 0)
+            {
+                database.Execute("CREATE TABLE `Binary` (`Name` CHAR(72) NOT NULL, `Data` OBJECT NOT NULL PRIMARY KEY `Name`)");
+                foreach (var (name, data) in _binaries)
+                {
+                    var file = System.IO.Path.GetTempFileName();
+                    try
+                    {
+                        File.WriteAllBytes(file, data);
+                        database.Execute("INSERT INTO `Binary` (`Name`, `Data`) VALUES (?, ?)", name, new FileInfo(file));
+                    }
+                    finally
+                    {
+                        File.Delete(file);
+                    }
                 }
             }
 

@@ -20,7 +20,8 @@ public sealed class MsiDatabase : IDisposable
 
     internal static MsiDatabase Create(string path) => Open(path, NativeMethods.OpenCreate);
 
-    // Values for the `?` markers in the query are bound in order: string, int or null.
+    // Values for the `?` markers in the query are bound in order: string, int or null (and a FileInfo for a stream
+    // column, which only the test helpers use).
     public IReadOnlyList<T> Query<T>(string sql, Func<MsiRecord, T> map, params object?[] parameters)
     {
         using var view = OpenAndExecute(sql, parameters);
@@ -108,6 +109,7 @@ public sealed class MsiDatabase : IDisposable
                 null => NativeMethods.ErrorSuccess,
                 string text => NativeMethods.MsiRecordSetString(record, field, text),
                 int number => NativeMethods.MsiRecordSetInteger(record, field, number),
+                FileInfo file => NativeMethods.MsiRecordSetStream(record, field, file.FullName),
                 var other => throw new ArgumentException($"Unsupported parameter type {other.GetType().Name}.", nameof(parameters)),
             };
 

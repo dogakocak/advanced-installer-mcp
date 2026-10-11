@@ -67,10 +67,11 @@ colour first.
 ### Run-time state: which controls are drawn
 
 A control is drawn when it is visible **after the dialog's ControlCondition rows are evaluated** against the
-`Property` table, with the caller's `properties` (name → value) applied on top. The evaluator covers the common
-part of the condition syntax: property names, `"strings"`, integers, `NOT`, `AND`, `OR`, parentheses and the
-comparison operators. A condition it cannot evaluate (environment variables, feature and component states, `XOR`,
-`EQV`, `IMP`, substring operators) leaves the control as authored, and the result lists it under `unevaluated`, so
+`Property` table, with the caller's `properties` (name → value) applied on top. The evaluator implements the
+documented syntax for properties: `"strings"`, integers, all logical, comparison, substring and bitwise operators
+with their precedence, `~` for case-insensitive comparison. A condition that needs install-time state
+(environment variables, feature and component states) or does not parse leaves the control as authored, and the
+result lists it under `unevaluated`, so
 the caller can pass the property values it needs and draw again. Properties a custom action would set are unknown
 here, which is exactly why `properties` exists.
 

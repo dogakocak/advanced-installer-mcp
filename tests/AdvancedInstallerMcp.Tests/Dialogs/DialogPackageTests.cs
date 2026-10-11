@@ -60,5 +60,32 @@ public sealed class DialogPackageTests
         package.TextStyles.ShouldBeEmpty();
         package.DefaultUIFont.ShouldBeNull();
         package.Properties["ProductName"].ShouldBe("Sample");
+        package.ReadBinary("Logo").ShouldBeNull();
+        package.ControlConditions("AnyDlg").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Reads_binary_streams()
+    {
+        byte[] data = [0x89, 0x50, 0x4E, 0x47, 1, 2, 3];
+        using var fixture = new TestPackage().WithBinary("Logo", data);
+        using var database = fixture.Build();
+
+        var package = DialogPackage.Load(database);
+
+        package.ReadBinary("Logo").ShouldBe(data);
+        package.ReadBinary("Missing").ShouldBeNull();
+    }
+
+    [Fact]
+    public void Reads_control_conditions_of_one_dialog()
+    {
+        using var fixture = ConnectionDialogs.Create()
+            .WithControlCondition(ConnectionDialogs.Broken, "Hint", "Hide", "DB_SERVER")
+            .WithControlCondition(ConnectionDialogs.Fixed, "Hint", "Show", "1");
+        using var database = fixture.Build();
+
+        DialogPackage.Load(database).ControlConditions(ConnectionDialogs.Broken)
+            .ShouldBe([new ControlConditionRow("Hint", "Hide", "DB_SERVER")]);
     }
 }

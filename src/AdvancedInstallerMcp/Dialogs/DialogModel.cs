@@ -40,6 +40,9 @@ public sealed record Control(
     public bool Conditional => ShownByCondition || HiddenByCondition;
 }
 
+// A row of the ControlCondition table: Action (Show, Hide, Enable, Disable, Default) applies when Condition is true.
+public sealed record ControlConditionRow(string Control, string Action, string Condition);
+
 // A row of the RadioButton table: one button of the RadioButtonGroup whose Property matches, placed relative to the group.
 public sealed record RadioButton(string Value, int X, int Y, int Width, int Height, string Text);
 

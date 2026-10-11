@@ -15,6 +15,25 @@ public sealed class MsiRecord
         return value == NativeMethods.NullInteger ? null : value;
     }
 
+    // The whole content of a stream field (a Binary row's Data, for example).
+    public byte[] ReadStream(int field)
+    {
+        using var content = new MemoryStream();
+        var buffer = new byte[64 * 1024];
+        while (true)
+        {
+            var length = (uint)buffer.Length;
+            MsiException.ThrowIfFailed(
+                NativeMethods.MsiRecordReadStream(_handle, (uint)field, buffer, ref length), $"Reading stream field {field}");
+            if (length == 0)
+            {
+                return content.ToArray();
+            }
+
+            content.Write(buffer, 0, (int)length);
+        }
+    }
+
     // Empty string for a null field, as msi.dll returns it; check IsNull when the difference matters.
     public string GetString(int field)
     {
