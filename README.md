@@ -36,8 +36,27 @@ claude mcp add advinst -- "%LOCALAPPDATA%\advinst-mcp\AdvancedInstallerMcp.exe"
 
 How the measurement works and where its numbers come from: [ADR 0003](docs/adr/0003-installer-units-and-text-measurement.md)
 and the [control calibration](docs/research/2026-10-11-control-calibration.md). The layout rules and why they compare
-what controls paint instead of their rectangles: [ADR 0005](docs/adr/0005-dialog-layout-rules.md). How `build` runs the command line and reads its output: [ADR 0002](docs/adr/0002-build-tool.md). How `render_dialog` draws and
-which controls it shows: [ADR 0006](docs/adr/0006-render-dialog.md).
+what controls paint instead of their rectangles: [ADR 0005](docs/adr/0005-dialog-layout-rules.md). How `build` runs
+the command line and reads its output: [ADR 0002](docs/adr/0002-build-tool.md). How `render_dialog` draws and which
+controls it shows: [ADR 0006](docs/adr/0006-render-dialog.md).
+
+## Skill
+
+`skills/advanced-installer` is a Claude Code skill with what an agent needs to know about Advanced Installer
+projects: build output that looks like errors but is not, editing `.aip` files without breaking them, how much room
+dialog text needs, secrets in install logs, service recovery units, and more. Each fact was found the hard way in the
+baseline runs (`docs/research`). It works without the server; when the server's tools are available, it tells the
+agent to use them.
+
+Install it for your user (all projects) or for one project:
+
+```
+xcopy /E /I skills\advanced-installer %USERPROFILE%\.claude\skills\advanced-installer
+xcopy /E /I skills\advanced-installer <your project>\.claude\skills\advanced-installer
+```
+
+`show-dialog.ps1` in the skill opens one dialog of a built MSI with msiexec on a modified copy, without installing
+anything, and saves a screenshot: the real look, when `render_dialog`'s approximation is not enough.
 
 ## Example: hidden clipped labels in a fallback UI
 

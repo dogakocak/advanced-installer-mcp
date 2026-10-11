@@ -24,6 +24,10 @@ credit the server with gains that a good skill file already delivers.
 - **Auto mode on** (permission prompts auto-approved). As a result the approval count is almost always 0 and the
   intervention count is the meaningful human-effort metric. Destructive actions are reviewed in the transcript.
 - The advisor tool may be called by the agent on its own; the number of calls is recorded per run.
+- **Skill (arms B and C):** the same `skills/advanced-installer` folder, copied from one recorded commit of this repo
+  to `%USERPROFILE%\.claude\skills\advanced-installer` before the run and removed after it. Arm A runs have no skill
+  installed. The skill's tool section applies only when the server's tools are present, so B and C read identical
+  text and differ only in the tools.
 
 ## One run
 
