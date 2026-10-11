@@ -15,7 +15,7 @@ public sealed class LintDialogToolTests
         var report = LintDialogTool.LintDialog(fixture.Path);
 
         report.Dialogs.ShouldBe([ConnectionDialogs.Broken, ConnectionDialogs.Fixed]);
-        report.Findings.ShouldHaveSingleItem().Dialog.ShouldBe(ConnectionDialogs.Broken);
+        report.Findings.Select(f => f.Dialog).ShouldBe([ConnectionDialogs.Broken, ConnectionDialogs.Broken]);
     }
 
     [Fact]

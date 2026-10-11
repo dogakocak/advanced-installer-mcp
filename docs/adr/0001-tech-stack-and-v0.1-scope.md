@@ -88,3 +88,4 @@ so it needs its own security design) and `.aip` editing tools (`add_file`, `set_
 - ADR 0003: DLU → pixel conversion and font selection (Tahoma 8 vs. theme font), shared by `lint_dialog` and
   `render_dialog`.
 - ADR 0004 (v0.2): security model of `install` (secrets never travel as tool arguments; log masking).
+- ADR 0005: `lint_dialog` layout rules (bounds, overlaps, tab chain, embedded UI).

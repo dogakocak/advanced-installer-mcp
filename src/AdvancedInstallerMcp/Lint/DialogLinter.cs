@@ -2,8 +2,8 @@ using AdvancedInstallerMcp.Dialogs;
 
 namespace AdvancedInstallerMcp.Lint;
 
-// lint_dialog's checks (ADR 0003). v0.1: whether the text of Text, CheckBox and PushButton controls fits, and the font
-// settings that make that answer less certain. Bounds, overlaps and the tab chain come next.
+// lint_dialog's checks: whether the text of Text, CheckBox and PushButton controls fits, and the font settings that make
+// that answer less certain (ADR 0003); bounds, overlaps, the tab chain and the embedded UI warning (ADR 0005).
 public static class DialogLinter
 {
     // Calibrated 2026-10-11 against msiexec on Windows 11 at 96 DPI with Tahoma 8 pt, four labels each
@@ -78,6 +78,8 @@ public static class DialogLinter
                     substitutedFaces.TryAdd(font.FaceName, actualFace);
                 }
             }
+
+            findings.AddRange(LayoutRules.Check(package, dialog));
         }
 
         findings.InsertRange(0, PackageFindings(package, anyText, substitutedFaces));
@@ -87,6 +89,14 @@ public static class DialogLinter
     private static IEnumerable<Finding> PackageFindings(
         DialogPackage package, bool anyText, IReadOnlyDictionary<string, string> substitutedFaces)
     {
+        if (package.HasEmbeddedUi)
+        {
+            yield return new Finding(
+                "embedded-ui", Severity.Warning,
+                "The package has its own embedded UI (MsiEmbeddedUI), which users normally see instead of these dialogs. " +
+                "The findings apply to the Windows Installer dialogs it falls back to, not to the embedded UI.");
+        }
+
         if (anyText && string.IsNullOrEmpty(package.DefaultUIFont))
         {
             yield return new Finding(
@@ -115,9 +125,7 @@ public static class DialogLinter
 
     private static TextKind? Kind(Control control) => control.Type switch
     {
-        // A zero-sized control is a deliberate way to have an invisible button or label.
-        _ when control.Width <= 0 || control.Height <= 0 => null,
-        _ when !control.Has(ControlAttributes.Visible) && !control.ShownByCondition => null,
+        _ when !LayoutRules.CanBeSeen(control) => null,
         _ when control.Has(ControlAttributes.Indirect) => null,
         "Text" => TextKind.Text,
         "CheckBox" when !control.Has(ControlAttributes.PushLike) && !HasImage(control) => TextKind.CheckBox,
@@ -224,6 +232,42 @@ public static class DialogLinter
             checks);
     }
 
+    // What a Text control paints at one DPI: its text as shown and the pixels it covers from the control's top-left
+    // corner, cut to the control. Null when nothing is painted (no text) or the text is not known before run time.
+    internal static TextInk? MeasureTextInk(DialogPackage package, Control control, int dpi)
+    {
+        if (control.TextFromEvent || control.Has(ControlAttributes.Indirect))
+        {
+            return null;
+        }
+
+        var parsed = ControlText.Parse(control.Text, package.Properties);
+        var (visible, _, _) = FormattedText.Resolve(parsed.DisplayText, package.Properties);
+        if (visible.Length == 0)
+        {
+            return null;
+        }
+
+        var font = FontResolver.Resolve(parsed.StyleName, package.TextStyles, package.DefaultUIFont);
+        var options = control.Has(ControlAttributes.NoWrap) ? MeasureOptions.NoWrap : MeasureOptions.None;
+        if (control.Has(ControlAttributes.NoPrefix))
+        {
+            options |= MeasureOptions.NoPrefix;
+        }
+
+        var (insetWidth, insetHeight) = Insets(control, TextKind.Text, dpi);
+        var availableWidth = Math.Max(InstallerUnits.ToPixels(control.Width, dpi) - insetWidth, 1);
+        var availableHeight = Math.Max(InstallerUnits.ToPixels(control.Height, dpi) - insetHeight, 1);
+        var measured = TextMeasurer.Measure(visible, font, dpi, availableWidth, options);
+
+        // Text that is too high shows the whole lines that fit (the last one ends in "..."), not a cut line.
+        var height = measured.Height <= availableHeight || availableHeight < measured.LineHeight
+            ? Math.Min(measured.Height, availableHeight)
+            : availableHeight / measured.LineHeight * measured.LineHeight;
+
+        return new TextInk(visible, Math.Min(measured.Width, availableWidth) + insetWidth, height + insetHeight);
+    }
+
     private static (int Width, int Height) Insets(Control control, TextKind kind, int dpi)
     {
         var border = control.Has(ControlAttributes.Sunken) ? 2 * Scale(SunkenBorder, dpi) : 0;
@@ -265,7 +309,7 @@ public static class DialogLinter
         return (width > control.Width ? width : null, height);
     }
 
-    private static int LineHeight(ResolvedFont font, int dpi) =>
+    internal static int LineHeight(ResolvedFont font, int dpi) =>
         TextMeasurer.Measure("x", font, dpi, 1000, MeasureOptions.None).LineHeight;
 
     private static string Plural(int count, string noun) => count switch
@@ -275,7 +319,7 @@ public static class DialogLinter
         _ => $"{count} {noun}s",
     };
 
-    private static int Scale(int pixelsAt96, int dpi) =>
+    internal static int Scale(int pixelsAt96, int dpi) =>
         (int)Math.Round(pixelsAt96 * dpi / 96.0, MidpointRounding.AwayFromZero);
 
     // The smallest number of installer units that gives at least `pixels` at this DPI.

@@ -12,6 +12,8 @@ public sealed class TestPackage : IDisposable
     private readonly List<object?[]> _controls = [];
     private readonly List<object?[]> _eventMappings = [];
     private readonly List<object?[]> _controlConditions = [];
+    private readonly List<object?[]> _embeddedUi = [];
+    private readonly List<object?[]> _radioButtons = [];
     private bool _withUiTables = true;
 
     public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"advinst-mcp-{Guid.NewGuid():N}.msi");
@@ -61,6 +63,21 @@ public sealed class TestPackage : IDisposable
         return this;
     }
 
+    // An MsiEmbeddedUI row; attributes 1 (msidbEmbeddedUI) marks the UI DLL, 0 a support file. No Data: only the
+    // attributes are read.
+    public TestPackage WithEmbeddedUi(string fileName, int attributes)
+    {
+        _embeddedUi.Add([fileName, fileName, attributes]);
+        return this;
+    }
+
+    public TestPackage WithRadioButton(string property, int order, string value, int x, int y, int width, int height,
+        string? text = null)
+    {
+        _radioButtons.Add([property, order, value, x, y, width, height, text]);
+        return this;
+    }
+
     public MsiDatabase Build()
     {
         using (var database = MsiDatabase.Create(Path))
@@ -74,6 +91,17 @@ public sealed class TestPackage : IDisposable
             if (_withUiTables)
             {
                 CreateUiTables(database);
+            }
+
+            if (_embeddedUi.Count > 0)
+            {
+                database.Execute(
+                    "CREATE TABLE `MsiEmbeddedUI` (`MsiEmbeddedUI` CHAR(72) NOT NULL, `FileName` CHAR(255) NOT NULL, " +
+                    "`Attributes` SHORT NOT NULL, `MessageFilter` LONG, `Data` OBJECT PRIMARY KEY `MsiEmbeddedUI`)");
+                foreach (var row in _embeddedUi)
+                {
+                    database.Execute("INSERT INTO `MsiEmbeddedUI` (`MsiEmbeddedUI`, `FileName`, `Attributes`) VALUES (?, ?, ?)", row);
+                }
             }
 
             database.Commit();
@@ -127,6 +155,20 @@ public sealed class TestPackage : IDisposable
             {
                 database.Execute(
                     "INSERT INTO `ControlCondition` (`Dialog_`, `Control_`, `Action`, `Condition`) VALUES (?, ?, ?, ?)", row);
+            }
+        }
+
+        if (_radioButtons.Count > 0)
+        {
+            database.Execute(
+                "CREATE TABLE `RadioButton` (`Property` CHAR(72) NOT NULL, `Order` SHORT NOT NULL, `Value` CHAR(64) NOT NULL, " +
+                "`X` SHORT NOT NULL, `Y` SHORT NOT NULL, `Width` SHORT NOT NULL, `Height` SHORT NOT NULL, " +
+                "`Text` CHAR(0) LOCALIZABLE, `Help` CHAR(50) LOCALIZABLE PRIMARY KEY `Property`, `Order`)");
+            foreach (var row in _radioButtons)
+            {
+                database.Execute(
+                    "INSERT INTO `RadioButton` (`Property`, `Order`, `Value`, `X`, `Y`, `Width`, `Height`, `Text`) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", row);
             }
         }
 

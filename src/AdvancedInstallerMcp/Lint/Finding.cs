@@ -2,10 +2,11 @@ namespace AdvancedInstallerMcp.Lint;
 
 public enum Severity
 {
-    // Wrong at 100 %, the scale most developers test with.
+    // Seen by every user who reaches the dialog, at 100 %, the scale most developers test with.
     Error,
 
-    // Wrong only at 125 % or 150 %, or a package setting that makes the result less certain.
+    // Depends on the scale (wrong only at 125 % or 150 %), on a ControlCondition, or on what the package does at run
+    // time; or a package setting that makes the other results less certain.
     Warning,
 }
 

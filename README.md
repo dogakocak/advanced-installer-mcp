@@ -29,11 +29,12 @@ claude mcp add advinst -- "%LOCALAPPDATA%\advinst-mcp\AdvancedInstallerMcp.exe"
 
 | Tool | What it does |
 |---|---|
-| `lint_dialog` | Reads the setup dialogs of a built `.msi` (no install) and reports labels of Text, CheckBox and PushButton controls that do not fit, measured with the package's own font as Windows draws it, at 100, 125 and 150 % scaling. Each finding gives the smallest size in installer units that fits. Pass `dialog` to check one dialog. |
+| `lint_dialog` | Reads the setup dialogs of a built `.msi` (no install) and reports labels of Text, CheckBox and PushButton controls that do not fit, measured with the package's own font as Windows draws it, at 100, 125 and 150 % scaling; each finding gives the smallest size in installer units that fits. Also reports controls cut off by the dialog's edge, controls whose visible content overlaps, a tab order that is not a closed cycle or misses controls, and packages whose embedded UI replaces these dialogs. Pass `dialog` to check one dialog. |
 | `ping` | Checks that the server runs. |
 
 How the measurement works and where its numbers come from: [ADR 0003](docs/adr/0003-installer-units-and-text-measurement.md)
-and the [control calibration](docs/research/2026-10-11-control-calibration.md).
+and the [control calibration](docs/research/2026-10-11-control-calibration.md). The layout rules and why they compare
+what controls paint instead of their rectangles: [ADR 0005](docs/adr/0005-dialog-layout-rules.md).
 
 ## Example: hidden clipped labels in a fallback UI
 

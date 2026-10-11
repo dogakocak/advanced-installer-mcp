@@ -10,11 +10,12 @@ public sealed class DialogLinterTests
     private const int VisibleEnabled = ControlAttributes.Visible | ControlAttributes.Enabled;
 
     [Fact]
-    public void Broken_connection_dialog_reports_only_the_clipped_hint()
+    public void Broken_connection_dialog_reports_the_clipped_hint_and_the_overlapping_check_box()
     {
         var findings = LintConnection(ConnectionDialogs.Broken);
 
-        var finding = findings.ShouldHaveSingleItem();
+        findings.Select(f => (f.Rule, f.Control)).ShouldBe([("text-clipped", "Hint"), ("controls-overlap", "TrustCheck")]);
+        var finding = findings[0];
         finding.Rule.ShouldBe("text-clipped");
         finding.Severity.ShouldBe(Severity.Error);
         finding.Control.ShouldBe("Hint");
@@ -241,7 +242,18 @@ public sealed class DialogLinterTests
         return DialogLinter.Lint(package, [package.FindDialog(dialogName)!]);
     }
 
-    private static IReadOnlyList<Finding> Lint(Func<TestPackage, TestPackage> controls, string? defaultUIFont = "DlgFont8")
+    // The text checks only: these fixtures leave out tab links and Control_First, which ADR 0005's rules would report
+    // (LayoutRulesTests covers those).
+    private static readonly HashSet<string> TextRules =
+    [
+        "text-clipped", "text-truncated", "button-text-clipped", "text-style-not-found", "default-ui-font-missing",
+        "default-ui-font-style-not-found", "font-not-installed",
+    ];
+
+    private static IReadOnlyList<Finding> Lint(Func<TestPackage, TestPackage> controls, string? defaultUIFont = "DlgFont8") =>
+        LintAll(controls, defaultUIFont).Where(f => TextRules.Contains(f.Rule)).ToList();
+
+    private static IReadOnlyList<Finding> LintAll(Func<TestPackage, TestPackage> controls, string? defaultUIFont)
     {
         var builder = new TestPackage().WithTextStyle("DlgFont8", "Tahoma", 8);
         if (defaultUIFont is not null)
