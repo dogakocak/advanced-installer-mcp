@@ -28,6 +28,15 @@ credit the server with gains that a good skill file already delivers.
   to `%USERPROFILE%\.claude\skills\advanced-installer` before the run and removed after it. Arm A runs have no skill
   installed. The skill's tool section applies only when the server's tools are present, so B and C read identical
   text and differ only in the tools.
+- **Server (arm C only):** registered as a local-scope MCP server for the project repository itself, the folder
+  runs start in (a registration on a parent folder does not reach a session started in a child folder). It runs from
+  a pinned copy of one publish, not from the development publish folder, so republishing during development cannot
+  change a series. Arms A and B have no registration in any scope.
+- A setup script switches the machine between arms and records what it installed; the per-run reset refuses to start
+  when the skill bytes, the registration or the server version differ from that record. The skill commit and the
+  server `ProductVersion` (which carries the source commit) are recorded per run.
+- Other MCP servers and skills present in the user profile (connectors, unrelated skills) stay as they were during
+  arm A and are listed per series.
 
 ## One run
 
