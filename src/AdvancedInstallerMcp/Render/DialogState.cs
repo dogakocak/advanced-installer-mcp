@@ -34,6 +34,14 @@ public sealed record DialogState(
             }
         }
 
+        return Evaluate(package, dialog, properties, condition => ConditionEvaluator.Evaluate(condition, properties));
+    }
+
+    // The same, with conditions answered by someone else (drive_dialog: Windows Installer's engine, ADR 0007) and
+    // the property values that engine holds.
+    public static DialogState Evaluate(
+        DialogPackage package, Dialog dialog, IReadOnlyDictionary<string, string> properties, Func<string, bool?> evaluate)
+    {
         var visible = dialog.Controls.ToDictionary(c => c.Name, c => c.Has(ControlAttributes.Visible), StringComparer.Ordinal);
         var enabled = dialog.Controls.ToDictionary(c => c.Name, c => c.Has(ControlAttributes.Enabled), StringComparer.Ordinal);
         var defaultControl = dialog.DefaultControl;
@@ -41,7 +49,7 @@ public sealed record DialogState(
 
         foreach (var row in package.ControlConditions(dialog.Name))
         {
-            var result = ConditionEvaluator.Evaluate(row.Condition, properties);
+            var result = evaluate(row.Condition);
             outcomes.Add(new ConditionOutcome(row.Control, row.Action, row.Condition, result));
             if (result != true || !visible.ContainsKey(row.Control))
             {

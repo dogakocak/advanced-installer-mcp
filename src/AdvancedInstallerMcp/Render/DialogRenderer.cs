@@ -39,9 +39,12 @@ public static class DialogRenderer
     private static readonly HashSet<string> BackgroundTypes = new(StringComparer.Ordinal) { "Bitmap", "Icon", "GroupBox", "Line" };
 
     public static RenderedDialog Render(
-        DialogPackage package, Dialog dialog, int dpi, IReadOnlyDictionary<string, string?> callerProperties)
+        DialogPackage package, Dialog dialog, int dpi, IReadOnlyDictionary<string, string?> callerProperties) =>
+        Render(package, dialog, dpi, DialogState.Evaluate(package, dialog, callerProperties));
+
+    // Draws a state someone else computed (drive_dialog, ADR 0007), so picture and report cannot disagree.
+    public static RenderedDialog Render(DialogPackage package, Dialog dialog, int dpi, DialogState state)
     {
-        var state = DialogState.Evaluate(package, dialog, callerProperties);
         using var painter = new Painter(package, state, dpi);
 
         var width = InstallerUnits.ToPixels(dialog.Width, dpi);

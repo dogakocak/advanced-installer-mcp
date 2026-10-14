@@ -44,6 +44,10 @@ public sealed class MsiDatabase : IDisposable
         return rows;
     }
 
+    // Optional tables (ControlCondition, Binary, ...) are simply absent from packages that do not use them.
+    public bool HasTable(string table) =>
+        Query("SELECT `Name` FROM `_Tables` WHERE `Name` = ?", r => r.GetString(1), table).Count > 0;
+
     internal void Execute(string sql, params object?[] parameters)
     {
         using var view = OpenAndExecute(sql, parameters);

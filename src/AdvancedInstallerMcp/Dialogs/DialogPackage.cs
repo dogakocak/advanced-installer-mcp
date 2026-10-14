@@ -37,12 +37,12 @@ public sealed class DialogPackage
     // A package without UI has no Dialog, Control or TextStyle table; that reads as empty, not as an error.
     public static DialogPackage Load(MsiDatabase database)
     {
-        var properties = HasTable(database, "Property")
+        var properties = database.HasTable("Property")
             ? database.Query("SELECT `Property`, `Value` FROM `Property`", r => (Name: r.GetString(1), Value: r.GetString(2)))
                 .ToDictionary(p => p.Name, p => p.Value, StringComparer.Ordinal)
             : new Dictionary<string, string>(StringComparer.Ordinal);
 
-        var textStyles = HasTable(database, "TextStyle")
+        var textStyles = database.HasTable("TextStyle")
             ? database.Query(
                     "SELECT `TextStyle`, `FaceName`, `Size`, `Color`, `StyleBits` FROM `TextStyle`",
                     r => new TextStyle(r.GetString(1), r.GetString(2), r.GetInteger(3) ?? 0, r.GetInteger(4),
@@ -50,11 +50,11 @@ public sealed class DialogPackage
                 .ToDictionary(s => s.Name, StringComparer.Ordinal)
             : new Dictionary<string, TextStyle>(StringComparer.Ordinal);
 
-        var dialogNames = HasTable(database, "Dialog")
+        var dialogNames = database.HasTable("Dialog")
             ? database.Query("SELECT `Dialog` FROM `Dialog`", r => r.GetString(1)).Order(StringComparer.Ordinal).ToList()
             : [];
 
-        var hasEmbeddedUi = HasTable(database, "MsiEmbeddedUI") &&
+        var hasEmbeddedUi = database.HasTable("MsiEmbeddedUI") &&
             database.Query("SELECT `Attributes` FROM `MsiEmbeddedUI`", r => r.GetInteger(1) ?? 0).Any(a => (a & 1) != 0);
 
         return new DialogPackage(database, properties, textStyles, dialogNames, hasEmbeddedUi);
@@ -84,7 +84,7 @@ public sealed class DialogPackage
     // The buttons of the RadioButtonGroup tied to this property, in their Order. Positions are relative to the group.
     public IReadOnlyList<RadioButton> RadioButtons(string property)
     {
-        _radioButtons ??= HasTable(_database, "RadioButton")
+        _radioButtons ??= _database.HasTable("RadioButton")
             ? _database.Query(
                     "SELECT `Property`, `Order`, `Value`, `X`, `Y`, `Width`, `Height`, `Text` FROM `RadioButton`",
                     r => (Property: r.GetString(1), Order: r.GetInteger(2) ?? 0, Button: new RadioButton(
@@ -99,13 +99,13 @@ public sealed class DialogPackage
 
     // The Binary row's data (a picture for a Bitmap or Icon control), or null when there is no such row.
     public byte[]? ReadBinary(string name) =>
-        HasTable(_database, "Binary")
+        _database.HasTable("Binary")
             ? _database.Query("SELECT `Data` FROM `Binary` WHERE `Name` = ?", r => r.ReadStream(1), name).SingleOrDefault()
             : null;
 
     // The dialog's ControlCondition rows: Show, Hide, Enable, Disable or Default when the condition is true.
     public IReadOnlyList<ControlConditionRow> ControlConditions(string dialogName) =>
-        HasTable(_database, "ControlCondition")
+        _database.HasTable("ControlCondition")
             ? _database.Query(
                 "SELECT `Control_`, `Action`, `Condition` FROM `ControlCondition` WHERE `Dialog_` = ?",
                 r => new ControlConditionRow(r.GetString(1), r.GetString(2), r.GetString(3)), dialogName)
@@ -113,7 +113,7 @@ public sealed class DialogPackage
 
     private IReadOnlyList<Control> ReadControls(string dialogName)
     {
-        if (!HasTable(_database, "Control"))
+        if (!_database.HasTable("Control"))
         {
             return [];
         }
@@ -144,7 +144,7 @@ public sealed class DialogPackage
 
     // Controls whose Text an EventMapping row replaces at run time (SelectionDescription, ActionText, ...).
     private HashSet<string> TextEventSubscribers(string dialogName) =>
-        HasTable(_database, "EventMapping")
+        _database.HasTable("EventMapping")
             ? _database.Query(
                     "SELECT `Control_` FROM `EventMapping` WHERE `Dialog_` = ? AND `Attribute` = 'Text'",
                     r => r.GetString(1), dialogName)
@@ -153,7 +153,7 @@ public sealed class DialogPackage
 
     // (control, action) pairs of the ControlCondition table: Show, Hide, Enable, Disable, Default.
     private HashSet<(string Control, string Action)> ConditionActions(string dialogName) =>
-        HasTable(_database, "ControlCondition")
+        _database.HasTable("ControlCondition")
             ? _database.Query(
                     "SELECT `Control_`, `Action` FROM `ControlCondition` WHERE `Dialog_` = ?",
                     r => (r.GetString(1), r.GetString(2)), dialogName)

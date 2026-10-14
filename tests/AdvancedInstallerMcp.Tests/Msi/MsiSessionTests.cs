@@ -3,6 +3,7 @@ using AdvancedInstallerMcp.Tests.Fixtures;
 
 namespace AdvancedInstallerMcp.Tests.Msi;
 
+[Collection(InstallSessionCollection.Name)]
 public sealed class MsiSessionTests
 {
     private static TestPackage Package() =>
@@ -57,6 +58,7 @@ public sealed class MsiSessionTests
         using var session = Open(fixture);
 
         session.Format("Server [SERVER], trust [TRUST][MISSING].").ShouldBe("Server sql01, trust 1.");
+        session.Format("{}").ShouldBe(""); // how a ControlEvent sets a property to nothing
     }
 
     [Fact]

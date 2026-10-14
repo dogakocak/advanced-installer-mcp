@@ -16,6 +16,8 @@ public sealed class TestPackage : IDisposable
     private readonly List<object?[]> _radioButtons = [];
     private readonly List<(string Name, byte[] Data)> _binaries = [];
     private readonly List<object?[]> _customActions = [];
+    private readonly List<object?[]> _controlEvents = [];
+    private readonly List<object?[]> _uiSequence = [];
     private bool _withUiTables = true;
     private bool _installPackage;
 
@@ -38,6 +40,19 @@ public sealed class TestPackage : IDisposable
     public TestPackage WithCustomAction(string action, int type, string? source, string? target)
     {
         _customActions.Add([action, type, source, target]);
+        return this;
+    }
+
+    public TestPackage WithControlEvent(string dialog, string control, string @event, string argument,
+        string? condition = null, int? ordering = null)
+    {
+        _controlEvents.Add([dialog, control, @event, argument, condition ?? "1", ordering]);
+        return this;
+    }
+
+    public TestPackage WithUiSequence(string action, int sequence, string? condition = null)
+    {
+        _uiSequence.Add([action, condition, sequence]);
         return this;
     }
 
@@ -117,6 +132,17 @@ public sealed class TestPackage : IDisposable
             {
                 database.Execute("INSERT INTO `Property` (`Property`, `Value`) VALUES (?, ?)", "ProductCode", NewGuid());
                 database.SetPackageSummary(NewGuid());
+            }
+
+            if (_uiSequence.Count > 0)
+            {
+                database.Execute(
+                    "CREATE TABLE `InstallUISequence` (`Action` CHAR(72) NOT NULL, `Condition` CHAR(255), " +
+                    "`Sequence` SHORT PRIMARY KEY `Action`)");
+                foreach (var row in _uiSequence)
+                {
+                    database.Execute("INSERT INTO `InstallUISequence` (`Action`, `Condition`, `Sequence`) VALUES (?, ?, ?)", row);
+                }
             }
 
             if (_customActions.Count > 0)
@@ -217,6 +243,20 @@ public sealed class TestPackage : IDisposable
             {
                 database.Execute(
                     "INSERT INTO `ControlCondition` (`Dialog_`, `Control_`, `Action`, `Condition`) VALUES (?, ?, ?, ?)", row);
+            }
+        }
+
+        if (_controlEvents.Count > 0)
+        {
+            database.Execute(
+                "CREATE TABLE `ControlEvent` (`Dialog_` CHAR(72) NOT NULL, `Control_` CHAR(50) NOT NULL, " +
+                "`Event` CHAR(50) NOT NULL, `Argument` CHAR(255) NOT NULL, `Condition` CHAR(255), `Ordering` SHORT " +
+                "PRIMARY KEY `Dialog_`, `Control_`, `Event`, `Argument`, `Condition`)");
+            foreach (var row in _controlEvents)
+            {
+                database.Execute(
+                    "INSERT INTO `ControlEvent` (`Dialog_`, `Control_`, `Event`, `Argument`, `Condition`, `Ordering`) " +
+                    "VALUES (?, ?, ?, ?, ?, ?)", row);
             }
         }
 

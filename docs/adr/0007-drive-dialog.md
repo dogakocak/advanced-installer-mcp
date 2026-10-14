@@ -103,6 +103,10 @@ Annotations: `ReadOnly = true`, `Destructive = false`, `Idempotent = true`, `Ope
 
 ## Consequences
 
+- **One session per process.** A second `MsiOpenPackage` while one is open in the same process fails with 1618
+  ("another installation is already in progress"); separate processes can each hold one (checked 2026-10-14), so an
+  install running elsewhere does not block the tool. The server serialises `drive_dialog` calls, and tests that
+  open sessions share one non-parallel collection.
 - New P/Invoke surface over msi.dll: `MsiOpenPackageEx`, `MsiDoAction`, `MsiSetProperty`, `MsiGetProperty`,
   `MsiEvaluateCondition`, `MsiFormatRecord`, `MsiSetInternalUI`. The session handle is one more `MsiHandle`.
 - The tool tells *what the dialog does* only as far as property-setting logic goes. A page whose behaviour hangs on
