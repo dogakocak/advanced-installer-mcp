@@ -4,6 +4,8 @@ Measurements that drive the design of this server.
 
 - `measurement-method.md` — arms (A: no MCP, B: skill only, C: MCP + skill), constants, run procedure, metrics.
 - `2026-10-10-baseline-arm-a.md` — baseline on a real-world project: 6 tasks × 3 runs, results and reading.
+- `2026-10-14-arms-b-and-c.md` — the same tasks with the skill (B) and with skill + server v0.1 (C): the server
+  cuts the setup-UI task's cost about 2× against the skill alone; no difference on the other tasks.
 - `advanced-installer-pitfalls.md` — Advanced Installer facts the agent had to rediscover; input for the skill and
   for tool design.
 - `2026-10-11-control-calibration.md` — check box and push button margins measured against msiexec, and how a label

@@ -8,8 +8,8 @@ method is used for the baseline and for every later arm, so numbers stay compara
 | Arm | Environment | When |
 |---|---|---|
 | A | Claude Code with shell tools (Bash/PowerShell) + a frozen project `CLAUDE.md` | baseline (done, see `2026-10-10-baseline-arm-a.md`) |
-| B | A + a skill file with Advanced Installer knowledge, no MCP server | after the skill phase |
-| C | MCP server + skill | after v0.1 |
+| B | A + a skill file with Advanced Installer knowledge, no MCP server | done, see `2026-10-14-arms-b-and-c.md` |
+| C | MCP server + skill | done, see `2026-10-14-arms-b-and-c.md` |
 
 `A − B` is what knowledge alone buys; `B − C` is what the MCP server itself buys. Reporting C against A alone would
 credit the server with gains that a good skill file already delivers.

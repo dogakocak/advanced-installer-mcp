@@ -58,6 +58,15 @@ xcopy /E /I skills\advanced-installer <your project>\.claude\skills\advanced-ins
 `show-dialog.ps1` in the skill opens one dialog of a built MSI with msiexec on a modified copy, without installing
 anything, and saves a screenshot: the real look, when `render_dialog`'s approximation is not enough.
 
+## Does it help?
+
+Measured on a real-world setup project, six tasks, three runs each, with Claude Code alone, with the skill, and with
+skill + server ([results](docs/research/2026-10-14-arms-b-and-c.md)). Every run succeeded in every arm. On the setup
+UI task (add a check box to a page, gate Next on a connection test, nothing clipped) the server cut the median cost
+from 9.7M cache-read tokens with the skill alone to 4.5M, and the median time from 16 to 11 minutes; `lint_dialog`
+found a label that was already clipped in every run. On build, packaging, service and install tasks the tools were
+not called and made no difference.
+
 ## Example: hidden clipped labels in a fallback UI
 
 The setup package of Advanced Installer 24.0 has two UIs. Normally it shows its own embedded UI (`MsiEmbeddedUI`).
