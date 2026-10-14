@@ -65,6 +65,50 @@ internal static partial class NativeMethods
     [LibraryImport(Msi, EntryPoint = "MsiRecordSetStreamW", StringMarshalling = StringMarshalling.Utf16)]
     public static partial uint MsiRecordSetStream(MsiHandle record, uint field, string filePath);
 
+    // Install sessions (ADR 0007). A session opened from outside msiexec is a restricted engine: built-in actions and
+    // property-setting custom actions run, custom actions that run package code are refused.
+    public const uint ErrorFunctionNotCalled = 1626;
+    public const uint OpenPackageIgnoreMachineState = 1;
+    public const int UiLevelNone = 2;
+
+    public const int ConditionFalse = 0;
+    public const int ConditionTrue = 1;
+    public const int ConditionNone = 2;
+
+    [LibraryImport(Msi, EntryPoint = "MsiOpenPackageExW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint MsiOpenPackageEx(string packagePath, uint options, out uint session);
+
+    // Process-wide: the UI level for sessions opened afterwards. Returns the previous level.
+    [LibraryImport(Msi)]
+    public static partial int MsiSetInternalUI(int level, nint window);
+
+    [LibraryImport(Msi, EntryPoint = "MsiGetPropertyW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint MsiGetProperty(MsiHandle session, string name, [Out] char[] buffer, ref uint length);
+
+    // An empty value deletes the property.
+    [LibraryImport(Msi, EntryPoint = "MsiSetPropertyW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint MsiSetProperty(MsiHandle session, string name, string value);
+
+    [LibraryImport(Msi, EntryPoint = "MsiEvaluateConditionW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial int MsiEvaluateCondition(MsiHandle session, string condition);
+
+    // Formats field 0 of the record as a template ([Property], [#File], ...).
+    [LibraryImport(Msi, EntryPoint = "MsiFormatRecordW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint MsiFormatRecord(MsiHandle session, MsiHandle record, [Out] char[] buffer, ref uint length);
+
+    [LibraryImport(Msi, EntryPoint = "MsiDoActionW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint MsiDoAction(MsiHandle session, string action);
+
+    // Tests only: the summary stream a package needs before MsiOpenPackage accepts it (template, package code, schema).
+    [LibraryImport(Msi, EntryPoint = "MsiGetSummaryInformationW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint MsiGetSummaryInformation(MsiHandle database, string? databasePath, uint updateCount, out uint summary);
+
+    [LibraryImport(Msi, EntryPoint = "MsiSummaryInfoSetPropertyW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint MsiSummaryInfoSetProperty(MsiHandle summary, uint property, uint dataType, int value, nint fileTime, string? text);
+
+    [LibraryImport(Msi)]
+    public static partial uint MsiSummaryInfoPersist(MsiHandle summary);
+
     [LibraryImport(Msi)]
     public static partial uint MsiCloseHandle(uint handle);
 }

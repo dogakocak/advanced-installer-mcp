@@ -15,13 +15,29 @@ public sealed class TestPackage : IDisposable
     private readonly List<object?[]> _embeddedUi = [];
     private readonly List<object?[]> _radioButtons = [];
     private readonly List<(string Name, byte[] Data)> _binaries = [];
+    private readonly List<object?[]> _customActions = [];
     private bool _withUiTables = true;
+    private bool _installPackage;
 
     public string Path { get; } = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"advinst-mcp-{Guid.NewGuid():N}.msi");
 
     public TestPackage WithoutUiTables()
     {
         _withUiTables = false;
+        return this;
+    }
+
+    // Adds what Windows Installer checks before it opens a session on the package (MsiOpenPackage): the summary
+    // stream and a ProductCode. Without them it refuses with 1620 and 1605.
+    public TestPackage AsInstallPackage()
+    {
+        _installPackage = true;
+        return this;
+    }
+
+    public TestPackage WithCustomAction(string action, int type, string? source, string? target)
+    {
+        _customActions.Add([action, type, source, target]);
         return this;
     }
 
@@ -97,6 +113,23 @@ public sealed class TestPackage : IDisposable
                 database.Execute("INSERT INTO `Property` (`Property`, `Value`) VALUES (?, ?)", name, value);
             }
 
+            if (_installPackage)
+            {
+                database.Execute("INSERT INTO `Property` (`Property`, `Value`) VALUES (?, ?)", "ProductCode", NewGuid());
+                database.SetPackageSummary(NewGuid());
+            }
+
+            if (_customActions.Count > 0)
+            {
+                database.Execute(
+                    "CREATE TABLE `CustomAction` (`Action` CHAR(72) NOT NULL, `Type` SHORT NOT NULL, `Source` CHAR(72), " +
+                    "`Target` CHAR(255) PRIMARY KEY `Action`)");
+                foreach (var row in _customActions)
+                {
+                    database.Execute("INSERT INTO `CustomAction` (`Action`, `Type`, `Source`, `Target`) VALUES (?, ?, ?, ?)", row);
+                }
+            }
+
             if (_withUiTables)
             {
                 CreateUiTables(database);
@@ -138,6 +171,8 @@ public sealed class TestPackage : IDisposable
     }
 
     public void Dispose() => File.Delete(Path);
+
+    private static string NewGuid() => $"{{{Guid.NewGuid().ToString().ToUpperInvariant()}}}";
 
     private void CreateUiTables(MsiDatabase database)
     {

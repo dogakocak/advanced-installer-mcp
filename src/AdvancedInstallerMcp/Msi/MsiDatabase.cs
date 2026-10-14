@@ -52,6 +52,22 @@ public sealed class MsiDatabase : IDisposable
 
     internal void Commit() => MsiException.ThrowIfFailed(NativeMethods.MsiDatabaseCommit(_handle), "Commit");
 
+    // Writes the summary properties Windows Installer checks before it opens a package: template (platform;language),
+    // package code, schema 200, compressed source. Before Commit.
+    internal void SetPackageSummary(string packageCode)
+    {
+        const uint template = 7, revision = 9, pageCount = 14, wordCount = 15;
+        const uint vtI4 = 3, vtLpstr = 30;
+
+        MsiException.ThrowIfFailed(NativeMethods.MsiGetSummaryInformation(_handle, null, 4, out var summaryHandle), "Summary information");
+        using var summary = MsiHandle.Own(summaryHandle);
+        MsiException.ThrowIfFailed(NativeMethods.MsiSummaryInfoSetProperty(summary, template, vtLpstr, 0, 0, "x64;1033"), "Template");
+        MsiException.ThrowIfFailed(NativeMethods.MsiSummaryInfoSetProperty(summary, revision, vtLpstr, 0, 0, packageCode), "Package code");
+        MsiException.ThrowIfFailed(NativeMethods.MsiSummaryInfoSetProperty(summary, pageCount, vtI4, 200, 0, null), "Schema");
+        MsiException.ThrowIfFailed(NativeMethods.MsiSummaryInfoSetProperty(summary, wordCount, vtI4, 2, 0, null), "Source type");
+        MsiException.ThrowIfFailed(NativeMethods.MsiSummaryInfoPersist(summary), "Summary persist");
+    }
+
     public void Dispose() => _handle.Dispose();
 
     private static MsiDatabase Open(string path, nint mode)

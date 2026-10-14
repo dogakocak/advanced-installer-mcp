@@ -35,20 +35,8 @@ public sealed class MsiRecord
     }
 
     // Empty string for a null field, as msi.dll returns it; check IsNull when the difference matters.
-    public string GetString(int field)
-    {
-        var buffer = new char[256];
-        var length = (uint)buffer.Length;
-        var result = NativeMethods.MsiRecordGetString(_handle, (uint)field, buffer, ref length);
-
-        if (result == NativeMethods.ErrorMoreData)
-        {
-            buffer = new char[length + 1];
-            length = (uint)buffer.Length;
-            result = NativeMethods.MsiRecordGetString(_handle, (uint)field, buffer, ref length);
-        }
-
-        MsiException.ThrowIfFailed(result, $"Reading field {field}");
-        return new string(buffer, 0, (int)length);
-    }
+    public string GetString(int field) =>
+        MsiStrings.Read(
+            (char[] buffer, ref uint length) => NativeMethods.MsiRecordGetString(_handle, (uint)field, buffer, ref length),
+            $"Reading field {field}");
 }
