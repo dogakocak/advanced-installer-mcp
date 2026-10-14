@@ -1,7 +1,7 @@
 # advanced-installer-mcp
 
 An [MCP](https://modelcontextprotocol.io) server that helps AI coding agents work with
-[Advanced Installer](https://www.advancedinstaller.com) projects: lint and render setup dialogs, run builds and
+[Advanced Installer](https://www.advancedinstaller.com) projects: lint, render and play setup dialogs, run builds and
 return structured results.
 
 Status: early development. See [ADR 0001](docs/adr/0001-tech-stack-and-v0.1-scope.md) for the planned v0.1 scope.
@@ -31,6 +31,7 @@ claude mcp add advinst -- "%LOCALAPPDATA%\advinst-mcp\AdvancedInstallerMcp.exe"
 |---|---|
 | `lint_dialog` | Reads the setup dialogs of a built `.msi` (no install) and reports labels of Text, CheckBox and PushButton controls that do not fit, measured with the package's own font as Windows draws it, at 100, 125 and 150 % scaling; each finding gives the smallest size in installer units that fits. Also reports controls cut off by the dialog's edge, controls whose visible content overlaps, a tab order that is not a closed cycle or misses controls, and packages whose embedded UI replaces these dialogs. Pass `dialog` to check one dialog. |
 | `render_dialog` | Draws one dialog of a built `.msi` as a PNG (no install) the way msiexec shows it when it opens: the package's fonts and texts, Windows-styled buttons, check boxes, radio buttons and edit boxes, pictures from the `Binary` table, at 100, 125 or 150 % scaling. Text is laid out exactly as `lint_dialog` measures it. `ControlCondition` rows are evaluated; pass `properties` to see another state of the page. Returns the image and a report of what it could not show (run-time lists as labelled frames, unresolved `[Property]` references, conditions it could not evaluate). |
+| `drive_dialog` | Plays the setup wizard of a built `.msi` without installing, in a restricted Windows Installer session: opens it as msiexec would (UI sequence up to the first page, or the Change wizard), then `set` values and `click` controls; each click plays the control's `ControlEvent` rows with Windows Installer evaluating every condition. Property-setting and built-in actions run; custom actions that run package code are refused by the engine, and `actionResults` says what they would set. Returns a report per step (property changes, events, dialogs opened, controls enabled or disabled) and the final page as a PNG. Password properties are masked. |
 | `build` | Builds an `.aip` with `AdvancedInstaller.com` and returns a structured result instead of the log: status, the exit code with its documented name, each build with the package it produced, build errors, and validator notes (`ERROR: AI_ICE…`, which do not fail a build) kept apart. Pass `builds` to run some builds, `rebuild` to skip the cache. Lines it does not recognise are returned, never dropped. |
 | `ping` | Checks that the server runs. |
 
@@ -38,7 +39,8 @@ How the measurement works and where its numbers come from: [ADR 0003](docs/adr/0
 and the [control calibration](docs/research/2026-10-11-control-calibration.md). The layout rules and why they compare
 what controls paint instead of their rectangles: [ADR 0005](docs/adr/0005-dialog-layout-rules.md). How `build` runs
 the command line and reads its output: [ADR 0002](docs/adr/0002-build-tool.md). How `render_dialog` draws and which
-controls it shows: [ADR 0006](docs/adr/0006-render-dialog.md).
+controls it shows: [ADR 0006](docs/adr/0006-render-dialog.md). How `drive_dialog` plays a wizard and why it never runs
+the package's code: [ADR 0007](docs/adr/0007-drive-dialog.md).
 
 ## Skill
 

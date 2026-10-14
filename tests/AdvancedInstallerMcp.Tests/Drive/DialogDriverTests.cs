@@ -6,62 +6,10 @@ namespace AdvancedInstallerMcp.Tests.Drive;
 [Collection(InstallSessionCollection.Name)]
 public sealed class DialogDriverTests
 {
-    private const string Welcome = "WelcomeDlg";
-    private const string Maint = "MaintDlg";
-    private const string Sql = "SqlDlg";
-    private const string Fail = "SqlFailDlg";
-    private const string Done = "DoneDlg";
-
-    // A connection page like the measured setup UI task: a trust check box set by a property-setting action when
-    // the wizard opens, a Test button whose real check is a script (refused by the restricted engine), and Next
-    // enabled only after a successful test.
-    private static TestPackage ConnectionWizard()
-    {
-        var package = new TestPackage()
-            .AsInstallPackage()
-            .WithProperty("DefaultUIFont", "DlgFont8")
-            .WithProperty("MsiHiddenProperties", "DB_PASSWORD")
-            .WithTextStyle("DlgFont8", "Tahoma", 8)
-            .WithCustomAction("InitTrust", 51, "UI_TRUST", "1")
-            .WithCustomAction("TestSql", 38, null, "Session.Property(\"SQL_OK\") = \"1\"")
-            .WithUiSequence("InitTrust", 10)
-            .WithUiSequence("PrepareDlg", 20)
-            .WithDialog("PrepareDlg", 370, 270, "Next", attributes: 1) // modeless: msiexec shows it and goes on
-            .WithControl("PrepareDlg", "Next", "PushButton", 236, 243, 56, 17, "Next")
-            .WithUiSequence(Welcome, 100, "NOT Installed")
-            .WithUiSequence(Maint, 101, "Installed");
-
-        foreach (var name in new[] { Welcome, Maint, Done })
-        {
-            package
-                .WithDialog(name, 370, 270, "Next", defaultControl: "Next")
-                .WithControl(name, "Next", "PushButton", 236, 243, 56, 17, "Next");
-        }
-
-        return package
-            .WithControlEvent(Welcome, "Next", "NewDialog", Sql)
-            .WithControlEvent(Maint, "Next", "NewDialog", Sql)
-            .WithControlEvent(Done, "Next", "EndDialog", "Return")
-            .WithDialog(Sql, 370, 270, "ServerEdit", defaultControl: "Next")
-            .WithControl(Sql, "ServerEdit", "Edit", 20, 60, 200, 18, property: "DB_SERVER", next: "PasswordEdit")
-            .WithControl(Sql, "PasswordEdit", "Edit", 20, 84, 200, 18, attributes: 0x200003, property: "DB_PASSWORD",
-                next: "TrustCheck")
-            .WithControl(Sql, "TrustCheck", "CheckBox", 20, 110, 200, 12, "Trust server certificate",
-                property: "UI_TRUST", next: "TestButton")
-            .WithControl(Sql, "TestButton", "PushButton", 230, 108, 80, 17, "Test Connection", next: "Next")
-            .WithControl(Sql, "Next", "PushButton", 236, 243, 56, 17, "Next", next: "ServerEdit")
-            .WithControlEvent(Sql, "TestButton", "[DB_TRUST]", "True", "UI_TRUST", 1)
-            .WithControlEvent(Sql, "TestButton", "[DB_TRUST]", "False", "NOT UI_TRUST", 2)
-            .WithControlEvent(Sql, "TestButton", "[SQL_OK]", "0", null, 3)
-            .WithControlEvent(Sql, "TestButton", "DoAction", "TestSql", null, 4)
-            .WithControlEvent(Sql, "TestButton", "[SQL_TESTED]", "1", "SQL_OK = \"1\"", 5)
-            .WithControlEvent(Sql, "TestButton", "SpawnDialog", Fail, "SQL_OK <> \"1\"", 6)
-            .WithControlEvent(Sql, "Next", "NewDialog", Done, "SQL_TESTED = \"1\"")
-            .WithControlCondition(Sql, "Next", "Disable", "SQL_TESTED <> \"1\"")
-            .WithControlCondition(Sql, "Next", "Enable", "SQL_TESTED = \"1\"")
-            .WithDialog(Fail, 200, 80, "OK")
-            .WithControl(Fail, "OK", "PushButton", 70, 50, 56, 17, "OK");
-    }
+    private const string Welcome = ConnectionWizard.Welcome;
+    private const string Maint = ConnectionWizard.Maint;
+    private const string Sql = ConnectionWizard.Sql;
+    private const string Fail = ConnectionWizard.Fail;
 
     private static DriveResult Drive(TestPackage fixture, DriveRequest request)
     {
@@ -77,7 +25,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void Opening_runs_the_ui_sequence_up_to_the_first_page()
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
 
         var result = Drive(fixture, Request());
 
@@ -90,7 +38,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void Maintenance_opens_the_page_a_change_shows()
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
 
         var result = Drive(fixture, Request() with { Maintenance = true });
 
@@ -100,7 +48,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void A_click_on_next_replaces_the_page()
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
 
         var result = Drive(fixture, Request(new ClickStep("Next")));
 
@@ -114,7 +62,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void A_refused_action_is_reported_and_its_outcome_left_unknown()
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
 
         var result = Drive(fixture, Request(new ClickStep("Next"), new ClickStep("TestButton")));
 
@@ -130,7 +78,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void Action_results_stand_in_for_a_refused_action()
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
         var request = Request(new ClickStep("Next"), new ClickStep("TestButton")) with
         {
             ActionResults = new Dictionary<string, IReadOnlyDictionary<string, string?>>
@@ -152,7 +100,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void A_click_on_a_disabled_button_does_nothing()
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
 
         var result = Drive(fixture, Request(new ClickStep("Next"), new ClickStep("Next")));
 
@@ -165,7 +113,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void An_empty_braces_argument_clears_the_property()
     {
-        using var fixture = ConnectionWizard().WithControlEvent(Sql, "TestButton", "[UI_TRUST]", "{}", null, 0);
+        using var fixture = ConnectionWizard.Create().WithControlEvent(Sql, "TestButton", "[UI_TRUST]", "{}", null, 0);
 
         var result = Drive(fixture, Request(new ClickStep("Next"), new ClickStep("TestButton")));
 
@@ -176,7 +124,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void An_unchecked_box_leaves_its_property_empty()
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
 
         var result = Drive(fixture, Request(
             new ClickStep("Next"),
@@ -190,7 +138,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void The_last_page_ends_the_wizard_and_later_steps_are_refused()
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
         var request = Request(new ClickStep("Next"), new ClickStep("TestButton"), new ClickStep("Next"),
             new ClickStep("Next")) with
         {
@@ -214,7 +162,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void Hidden_property_values_are_masked()
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
 
         var result = Drive(fixture, Request(
             new ClickStep("Next"),
@@ -229,7 +177,7 @@ public sealed class DialogDriverTests
     [Fact]
     public void A_named_dialog_is_opened_directly_after_the_opening()
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
 
         var result = Drive(fixture, Request(new ClickStep("TestButton")) with { Dialog = Sql });
 
@@ -242,7 +190,7 @@ public sealed class DialogDriverTests
     [InlineData(null, "NoSuchButton", "NoSuchButton")]
     public void Unknown_dialogs_and_controls_are_explained(string? dialog, string control, string expected)
     {
-        using var fixture = ConnectionWizard();
+        using var fixture = ConnectionWizard.Create();
 
         Should.Throw<DriveException>(() => Drive(fixture, Request(new ClickStep(control)) with { Dialog = dialog }))
             .Message.ShouldContain(expected);

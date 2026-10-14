@@ -35,13 +35,14 @@ built MSI and what the user sees, not the build's exit code.**
 
 ## When the advinst MCP tools are available
 
-If tools named `build`, `lint_dialog` and `render_dialog` (server `advinst`) are in your tool list, use them:
+If tools named `build`, `lint_dialog`, `render_dialog` and `drive_dialog` (server `advinst`) are in your tool list, use them:
 
 | Instead of | Use |
 |---|---|
 | Running `AdvancedInstaller.com /build` and reading its output | `build` (structured result; `validation` holds the `AI_ICE` notes, `errors` the real failures; read `unrecognized`) |
 | Estimating whether text fits from character counts | `lint_dialog` on the built MSI |
 | Installing, driving the wizard and taking screenshots to see a dialog | `render_dialog` (pass `properties` for another state of the page) |
+| Installing and clicking through the wizard to see what a page does (is Next enabled after a test, what an unchecked box sets, which page a button opens) | `drive_dialog` (steps `set` / `click`; a custom action that runs code, such as a connection test, is not run: pass `actionResults` with what it sets, once for success and once for failure) |
 
 After a dialog change: `build` → `lint_dialog` on the returned package → fix findings → `render_dialog` to look at
-the result. Install only when the task needs behaviour, not looks.
+the result → `drive_dialog` to play the page's buttons. Install only when the package's own code has to run for real.

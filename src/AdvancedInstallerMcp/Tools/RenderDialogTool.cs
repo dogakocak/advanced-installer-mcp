@@ -12,8 +12,6 @@ namespace AdvancedInstallerMcp.Tools;
 [McpServerToolType]
 public static class RenderDialogTool
 {
-    private static readonly Dictionary<int, int> DpiByScaling = new() { [100] = 96, [125] = 120, [150] = 144 };
-
     private static readonly JsonSerializerOptions ReportJson = new(JsonSerializerDefaults.Web);
 
     [McpServerTool(Name = "render_dialog", ReadOnly = false, Destructive = false, Idempotent = true, OpenWorld = false)]
@@ -37,10 +35,7 @@ public static class RenderDialogTool
         Dictionary<string, string?>? properties = null,
         [Description("Also save the PNG to this path (.png). Omit to only return it.")] string? outputPath = null)
     {
-        if (!DpiByScaling.TryGetValue(scaling, out var dpi))
-        {
-            throw new McpException("scaling must be 100, 125 or 150.");
-        }
+        var dpi = DisplayScaling.ToDpi(scaling);
 
         if (outputPath is not null && !string.Equals(Path.GetExtension(outputPath), ".png", StringComparison.OrdinalIgnoreCase))
         {
