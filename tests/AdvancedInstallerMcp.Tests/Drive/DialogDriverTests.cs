@@ -175,6 +175,20 @@ public sealed class DialogDriverTests
     }
 
     [Fact]
+    public void Long_values_are_shortened_in_the_report()
+    {
+        // Advanced Installer passes whole PowerShell scripts through CustomActionData; 20,000 characters per change
+        // would drown the report.
+        using var fixture = ConnectionWizard.Create();
+        var script = new string('x', 1000);
+
+        var result = Drive(fixture, Request(new SetStep(new Dictionary<string, string?> { ["CustomActionData"] = script })));
+
+        var change = result.Steps.ShouldHaveSingleItem().Properties.ShouldHaveSingleItem();
+        change.New.ShouldBe(new string('x', 120) + "… (1000 characters)");
+    }
+
+    [Fact]
     public void A_named_dialog_is_opened_directly_after_the_opening()
     {
         using var fixture = ConnectionWizard.Create();

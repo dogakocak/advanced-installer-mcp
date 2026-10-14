@@ -12,6 +12,9 @@ public static class DialogDriver
 {
     private const string Masked = "***";
 
+    // Longer values are cut in the report: Advanced Installer passes whole scripts through CustomActionData.
+    private const int ShownCharacters = 120;
+
     public static DriveResult Drive(string msiPath, DriveRequest request)
     {
         using var database = MsiDatabase.OpenReadOnly(msiPath);
@@ -256,10 +259,13 @@ public static class DialogDriver
             after
                 .Where(p => before[p.Key] != p.Value)
                 .OrderBy(p => p.Key, StringComparer.Ordinal)
-                .Select(p => new PropertyChange(p.Key, Mask(p.Key, before[p.Key]), Mask(p.Key, p.Value)))
+                .Select(p => new PropertyChange(p.Key, Shown(p.Key, before[p.Key]), Shown(p.Key, p.Value)))
                 .ToList();
 
-        private string Mask(string name, string value) => value.Length > 0 && _hidden.Contains(name) ? Masked : value;
+        private string Shown(string name, string value) =>
+            value.Length > 0 && _hidden.Contains(name) ? Masked
+            : value.Length > ShownCharacters ? $"{value[..ShownCharacters]}… ({value.Length} characters)"
+            : value;
 
         private HashSet<string> HiddenProperties() =>
             session.GetProperty("MsiHiddenProperties")

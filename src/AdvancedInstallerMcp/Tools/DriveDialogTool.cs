@@ -13,7 +13,7 @@ namespace AdvancedInstallerMcp.Tools;
 
 public sealed record DriveStepInput(
     [property: Description(
-        "Values the user enters on the page: {\"PROPERTY\": \"value\"}. An unchecked check box is \"\" (or null), as " +
+        "Values the user enters on the page: {\"PROPERTY\": \"value\"}. An unchecked check box is \"\", as " +
         "Windows Installer leaves its property empty.")]
     Dictionary<string, string?>? Set = null,
     [property: Description("Name of the control the user clicks (the Control table's key on the current page).")]
