@@ -31,8 +31,10 @@ public static class RenderDialogTool
         [Description("Full path of the built .msi package.")] string msiPath,
         [Description("Name of the dialog (the Dialog table's key, e.g. 'WelcomeDlg').")] string dialog,
         [Description("Display scaling in percent: 100, 125 or 150.")] int scaling = 100,
-        [Description("Property values to use instead of the package's, e.g. {\"AI_REPLACE_PRODUCTS\": \"1\"}.")]
-        Dictionary<string, string>? properties = null,
+        [Description(
+            "Property values to use instead of the package's, e.g. {\"AI_REPLACE_PRODUCTS\": \"1\"}. " +
+            "null or \"\" unsets a property, as an empty value does in Windows Installer.")]
+        Dictionary<string, string?>? properties = null,
         [Description("Also save the PNG to this path (.png). Omit to only return it.")] string? outputPath = null)
     {
         if (!DpiByScaling.TryGetValue(scaling, out var dpi))

@@ -15,7 +15,7 @@ public sealed class DialogRendererTests
     private static extern int GetSysColor(int index);
 
     private static (RenderedDialog Result, Bitmap Image) Render(
-        TestPackage fixture, string dialog, int dpi = 96, Dictionary<string, string>? properties = null)
+        TestPackage fixture, string dialog, int dpi = 96, Dictionary<string, string?>? properties = null)
     {
         using var database = fixture.Build();
         var package = DialogPackage.Load(database);

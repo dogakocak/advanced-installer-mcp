@@ -9,7 +9,8 @@ public sealed record ControlState(Control Control, bool Visible, bool Enabled);
 public sealed record ConditionOutcome(string Control, string Action, string Condition, bool? Result);
 
 // How the dialog looks when it opens (ADR 0006): the Control table's attributes, then every ControlCondition row
-// whose condition is true, in table order. Properties are the package's, with the caller's values on top.
+// whose condition is true, in table order. Properties are the package's, with the caller's values on top
+// (a null or empty caller value unsets the property).
 public sealed record DialogState(
     IReadOnlyList<ControlState> Controls,
     string? DefaultControl,
@@ -17,12 +18,20 @@ public sealed record DialogState(
     IReadOnlyDictionary<string, string> Properties)
 {
     public static DialogState Evaluate(
-        DialogPackage package, Dialog dialog, IReadOnlyDictionary<string, string> callerProperties)
+        DialogPackage package, Dialog dialog, IReadOnlyDictionary<string, string?> callerProperties)
     {
         var properties = new Dictionary<string, string>(package.Properties, StringComparer.Ordinal);
         foreach (var (name, value) in callerProperties)
         {
-            properties[name] = value;
+            // Windows Installer deletes a property set to an empty value; null is how a JSON caller says the same.
+            if (string.IsNullOrEmpty(value))
+            {
+                properties.Remove(name);
+            }
+            else
+            {
+                properties[name] = value;
+            }
         }
 
         var visible = dialog.Controls.ToDictionary(c => c.Name, c => c.Has(ControlAttributes.Visible), StringComparer.Ordinal);

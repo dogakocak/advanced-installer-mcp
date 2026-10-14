@@ -39,7 +39,7 @@ public static class DialogRenderer
     private static readonly HashSet<string> BackgroundTypes = new(StringComparer.Ordinal) { "Bitmap", "Icon", "GroupBox", "Line" };
 
     public static RenderedDialog Render(
-        DialogPackage package, Dialog dialog, int dpi, IReadOnlyDictionary<string, string> callerProperties)
+        DialogPackage package, Dialog dialog, int dpi, IReadOnlyDictionary<string, string?> callerProperties)
     {
         var state = DialogState.Evaluate(package, dialog, callerProperties);
         using var painter = new Painter(package, state, dpi);

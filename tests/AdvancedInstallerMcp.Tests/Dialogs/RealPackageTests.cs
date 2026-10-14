@@ -44,7 +44,7 @@ public sealed class RealPackageTests
         foreach (var name in package.DialogNames)
         {
             var dialog = package.FindDialog(name)!;
-            var rendered = AdvancedInstallerMcp.Render.DialogRenderer.Render(package, dialog, 96, new Dictionary<string, string>());
+            var rendered = AdvancedInstallerMcp.Render.DialogRenderer.Render(package, dialog, 96, new Dictionary<string, string?>());
 
             using var image = new System.Drawing.Bitmap(new MemoryStream(rendered.Png));
             image.Width.ShouldBe(Math.Max(1, InstallerUnits.ToPixels(dialog.Width, 96)), name);

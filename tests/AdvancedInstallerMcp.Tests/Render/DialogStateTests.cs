@@ -21,11 +21,11 @@ public sealed class DialogStateTests
             .WithControlCondition(Dlg, "Question", "Hide", "AI_REPLACE")
             .WithControlCondition(Dlg, "QuestionReplace", "Hide", "NOT AI_REPLACE");
 
-    private static DialogState Evaluate(TestPackage fixture, IReadOnlyDictionary<string, string>? properties = null)
+    private static DialogState Evaluate(TestPackage fixture, IReadOnlyDictionary<string, string?>? properties = null)
     {
         using var database = fixture.Build();
         var package = DialogPackage.Load(database);
-        return DialogState.Evaluate(package, package.FindDialog(Dlg)!, properties ?? new Dictionary<string, string>());
+        return DialogState.Evaluate(package, package.FindDialog(Dlg)!, properties ?? new Dictionary<string, string?>());
     }
 
     private static IEnumerable<string> VisibleNames(DialogState state) =>
@@ -50,8 +50,22 @@ public sealed class DialogStateTests
     {
         using var fixture = StackedQuestions();
 
-        VisibleNames(Evaluate(fixture, new Dictionary<string, string> { ["AI_REPLACE"] = "1" }))
+        VisibleNames(Evaluate(fixture, new Dictionary<string, string?> { ["AI_REPLACE"] = "1" }))
             .ShouldBe(["QuestionReplace", "Next", "Back"], ignoreOrder: true);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void A_null_or_empty_caller_value_unsets_the_property(string? value)
+    {
+        // Setting a property to an empty value deletes it in Windows Installer; JSON callers say the same with null.
+        using var fixture = StackedQuestions().WithProperty("AI_REPLACE", "1");
+
+        var state = Evaluate(fixture, new Dictionary<string, string?> { ["AI_REPLACE"] = value });
+
+        VisibleNames(state).ShouldBe(["Question", "Next", "Back"], ignoreOrder: true);
+        state.Properties.ContainsKey("AI_REPLACE").ShouldBeFalse();
     }
 
     [Fact]
