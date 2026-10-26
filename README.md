@@ -60,6 +60,10 @@ xcopy /E /I skills\advanced-installer <your project>\.claude\skills\advanced-ins
 `show-dialog.ps1` in the skill opens one dialog of a built MSI with msiexec on a modified copy, without installing
 anything, and saves a screenshot: the real look, when `render_dialog`'s approximation is not enough.
 
+Before an agent builds setup screens, `setup-ui-review.md` has it show every screen as a wireframe drawn only
+with controls MSI has (`wireframe-template.html`), say which control it chose for each value and why, and give the
+command line for an unattended install. It builds the dialogs after the user approves.
+
 ## Does it help?
 
 Measured on a real-world setup project, six tasks, three runs each, with Claude Code alone, with the skill, and with

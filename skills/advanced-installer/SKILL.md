@@ -13,6 +13,9 @@ built MSI and what the user sees, not the build's exit code.**
 
 ## Rules that cost the most when skipped
 
+- **Show the setup screens before building them.** Before adding or changing dialogs, show every wizard screen
+  as a wireframe with an input table and wait for the user's approval; then build them to match. See
+  `setup-ui-review.md`.
 - **Never edit an `.aip` with `sed -i` from Git Bash.** `.aip` files are CRLF; Git Bash rewrites them as LF and
   Advanced Installer misbehaves. Use `AdvancedInstaller.com /edit`, PowerShell, or a script that keeps CRLF.
 - **`ERROR: AI_ICE…` lines in build output are best-practice notes**, printed on clean builds too. They are not build
@@ -29,6 +32,7 @@ built MSI and what the user sees, not the build's exit code.**
 | Task | File |
 |---|---|
 | Build, CLI, editing the `.aip`, verifying package content | `project-and-build.md` |
+| New or changed setup screens: wireframe review, which control for which value, unattended inputs | `setup-ui-review.md` |
 | Dialogs: adding controls, text that fits, conditions, seeing a dialog without installing (`show-dialog.ps1`) | `dialogs.md` |
 | Custom actions, secrets, install logs | `custom-actions-and-logs.md` |
 | Windows services, recovery settings, upgrades, repair, uninstall | `services-and-lifecycle.md` |

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup wireframes</title>
+<!--
+  Wireframe kit for setup-ui-review.md. Copy this file, replace the example screens with the wizard's screens
+  (all of them, in order) and keep only classes defined here. Each class stands for an MSI control:
+    .hd          banner (title, description, .lg = banner bitmap)     .side/.bmp  Welcome/Finish layout with side bitmap
+    .ed          Edit / PathEdit / MaskedEdit / ComboBox (closed)     .btn        PushButton (.off = disabled)
+    ◉ ○          RadioButtonGroup items                               ☑ ☐         CheckBox
+    .dis         fields disabled by a ControlCondition                .hint       hint Text under a field
+    .scroll      ScrollableText                                       .bar        ProgressBar
+  When the page is shown inline in a chat that supplies these colour tokens, drop the :root blocks.
+-->
+<style>
+:root{--surface-1:#f9f9f7;--surface-2:#fff;--text-primary:#1d1d1b;--text-secondary:#5b5a55;--text-muted:#9a9993;
+  --border:rgba(0,0,0,.1);--border-strong:rgba(0,0,0,.2);--border-stronger:rgba(0,0,0,.4);--fill-success:#0ca30c}
+@media (prefers-color-scheme:dark){:root{--surface-1:#151515;--surface-2:#1e1e1d;--text-primary:#ecebe6;--text-secondary:#b4b3ac;
+  --text-muted:#7b7974;--border:rgba(255,255,255,.1);--border-strong:rgba(255,255,255,.2);--border-stronger:rgba(255,255,255,.4)}}
+body{margin:0;background:var(--surface-1);color:var(--text-primary);font:14px/1.5 "Segoe UI",system-ui,sans-serif}
+main{max-width:1040px;margin:0 auto;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.cap{font-size:13px;color:var(--text-secondary);margin:0 0 6px}
+.dlg{background:var(--surface-2);border:.5px solid var(--border-strong);border-radius:4px;font-size:12px;overflow:hidden}
+.hd{padding:10px 14px;border-bottom:.5px solid var(--border-strong);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hd b{font-weight:500;display:block}.hd span{color:var(--text-secondary)}
+.lg{width:26px;height:26px;flex-shrink:0;border:.5px dashed var(--border-stronger);border-radius:2px}
+.bd{padding:12px 14px;min-height:170px;line-height:1.7}
+.side{display:grid;grid-template-columns:90px 1fr;min-height:216px}.side>div:last-child{padding:14px}
+.bmp{border-right:.5px dashed var(--border-stronger);background:var(--surface-1)}
+.big{font-weight:500;font-size:15px;line-height:1.3}
+.ed{border:.5px solid var(--border-stronger);padding:0 6px;border-radius:2px;min-height:20px}
+.row{display:flex;gap:6px;align-items:center}
+.sub{padding-left:20px}
+.dis{color:var(--text-muted)}.dis .ed{border-color:var(--border)}
+.hint{color:var(--text-secondary);font-size:11px}
+.scroll{height:86px;overflow:hidden;font-size:11px;color:var(--text-secondary);line-height:1.5;padding:4px 6px}
+.bar{height:12px;border:.5px solid var(--border-stronger);border-radius:2px}.bar i{display:block;height:100%;width:40%;background:var(--fill-success)}
+.btn{border:.5px solid var(--border-stronger);border-radius:3px;padding:2px 10px;font-size:11px;display:inline-block;background:var(--surface-1);white-space:nowrap}
+.off{color:var(--text-muted);border-color:var(--border)}
+.ft{border-top:.5px solid var(--border-strong);padding:8px 14px;text-align:right}
+</style>
+</head>
+<body><main><div class="grid">
+
+<div><p class="cap">1 — Welcome</p><div class="dlg">
+  <div class="side"><div class="bmp"></div><div><div class="big">Welcome to the Product Setup Wizard</div>
+  <p style="margin:10px 0 0">The Setup Wizard will install Product on your computer. Click Next to continue or Cancel to exit.</p></div></div>
+  <div class="ft"><span class="btn off">&lt; Back</span> <span class="btn">Next &gt;</span> &nbsp;<span class="btn">Cancel</span></div>
+</div></div>
+
+<div><p class="cap">2 — Choice that enables fields (RadioButtonGroup + ControlCondition)</p><div class="dlg">
+  <div class="hd"><div><b>Service Account</b><span>Choose the account the service runs as.</span></div><div class="lg"></div></div>
+  <div class="bd">
+    <div>◉ Local System (recommended)</div><div>○ This account:</div>
+    <div class="sub dis">
+      <div class="row">User name <span class="ed" style="flex:1"></span></div>
+      <div class="hint" style="padding-left:62px">DOMAIN\user or .\user</div>
+      <div class="row">Password &nbsp;<span class="ed" style="flex:1"></span></div>
+    </div>
+  </div>
+  <div class="ft"><span class="btn">&lt; Back</span> <span class="btn">Next &gt;</span> &nbsp;<span class="btn">Cancel</span></div>
+</div></div>
+
+<div><p class="cap">3 — Folder, check boxes, list (PathEdit, CheckBox, ComboBox)</p><div class="dlg">
+  <div class="hd"><div><b>Options</b><span>Choose where and how Product runs.</span></div><div class="lg"></div></div>
+  <div class="bd">
+    <div>Install to:</div>
+    <div class="row"><span class="ed" style="flex:1">C:\Program Files\Product\</span><span class="btn">Browse…</span></div>
+    <div style="margin-top:6px">☑ Start the service when setup finishes</div>
+    <div>Log level:</div><div class="ed" style="width:150px">Information ▾</div>
+  </div>
+  <div class="ft"><span class="btn">&lt; Back</span> <span class="btn">Next &gt;</span> &nbsp;<span class="btn">Cancel</span></div>
+</div></div>
+
+<div><p class="cap">4 — Progress</p><div class="dlg">
+  <div class="hd"><div><b>Installing Product</b><span>Please wait while the Setup Wizard installs Product.</span></div><div class="lg"></div></div>
+  <div class="bd"><div>Status: Copying new files</div><div class="bar"><i></i></div></div>
+  <div class="ft"><span class="btn off">&lt; Back</span> <span class="btn off">Next &gt;</span> &nbsp;<span class="btn">Cancel</span></div>
+</div></div>
+
+</div></main></body>
+</html>
