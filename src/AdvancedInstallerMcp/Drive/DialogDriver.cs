@@ -161,6 +161,23 @@ public static class DialogDriver
             foreach (var row in tables.Events(dialog.Name, control))
             {
                 var condition = session.EvaluateCondition(row.Condition);
+
+                // A SpawnWaitDialog's condition is what it waits for: the box is up while it is false.
+                if (row.Event == "SpawnWaitDialog" && condition is not null && tables.IsDialog(row.Argument))
+                {
+                    if (condition == true)
+                    {
+                        events.Add(Report(row, EventReports.NoWait));
+                    }
+                    else
+                    {
+                        opened.Add(row.Argument);
+                        events.Add(Report(row, EventReports.WaitDialogOpened));
+                    }
+
+                    continue;
+                }
+
                 if (condition != true)
                 {
                     events.Add(Report(row, condition is null ? EventReports.ConditionError : EventReports.ConditionFalse));
@@ -186,7 +203,7 @@ public static class DialogDriver
                         events.Add(Report(row, EventReports.PageReplaced));
                         break;
 
-                    case "SpawnDialog" or "SpawnWaitDialog" when tables.IsDialog(row.Argument):
+                    case "SpawnDialog" when tables.IsDialog(row.Argument):
                         opened.Add(row.Argument);
                         events.Add(Report(row, EventReports.DialogOpened));
                         break;

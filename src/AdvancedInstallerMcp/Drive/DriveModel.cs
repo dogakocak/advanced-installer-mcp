@@ -85,6 +85,8 @@ public static class EventReports
     public const string ConditionError = "skipped: condition does not parse";
     public const string PageReplaced = "page replaced";
     public const string DialogOpened = "dialog opened";
+    public const string WaitDialogOpened = "dialog opened: it stays up until the condition holds";
+    public const string NoWait = "skipped: condition already holds, nothing to wait for";
     public const string NoSuchDialog = "skipped: no such dialog";
     public const string WizardEnded = "wizard ended";
     public const string NotPlayed = "not played in this version";

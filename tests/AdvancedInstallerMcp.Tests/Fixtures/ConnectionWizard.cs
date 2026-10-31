@@ -8,6 +8,7 @@ public static class ConnectionWizard
     public const string Sql = "SqlDlg";
     public const string Fail = "SqlFailDlg";
     public const string Done = "DoneDlg";
+    public const string Wait = "WaitDlg";
 
     // A connection page like the measured setup UI task: a trust check box set by a property-setting action when
     // the wizard opens, a Test button whose real check is a script (refused by the restricted engine), and Next
@@ -37,7 +38,11 @@ public static class ConnectionWizard
 
         return package
             .WithControlEvent(Welcome, "Next", "NewDialog", Sql)
-            .WithControlEvent(Maint, "Next", "NewDialog", Sql)
+            .WithControlEvent(Maint, "Next", "NewDialog", Sql, null, 1)
+            // A "please wait" box: shown while its condition is false, like WiX's WaitForCostingDlg.
+            .WithControlEvent(Maint, "Next", "SpawnWaitDialog", Wait, "READY = \"1\"", 2)
+            .WithDialog(Wait, 200, 80, "Cancel")
+            .WithControl(Wait, "Cancel", "PushButton", 70, 50, 56, 17, "Cancel")
             .WithControlEvent(Done, "Next", "EndDialog", "Return")
             .WithDialog(Sql, 370, 270, "ServerEdit", defaultControl: "Next")
             .WithControl(Sql, "ServerEdit", "Edit", 20, 60, 200, 18, property: "DB_SERVER", next: "PasswordEdit")

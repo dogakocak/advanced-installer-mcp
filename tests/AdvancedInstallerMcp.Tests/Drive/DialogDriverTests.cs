@@ -10,6 +10,7 @@ public sealed class DialogDriverTests
     private const string Maint = ConnectionWizard.Maint;
     private const string Sql = ConnectionWizard.Sql;
     private const string Fail = ConnectionWizard.Fail;
+    private const string Wait = ConnectionWizard.Wait;
 
     private static DriveResult Drive(TestPackage fixture, DriveRequest request)
     {
@@ -43,6 +44,35 @@ public sealed class DialogDriverTests
         var result = Drive(fixture, Request() with { Maintenance = true });
 
         result.Opening.FirstPage.ShouldBe(Maint);
+    }
+
+    [Fact]
+    public void A_wait_dialog_opens_while_its_condition_is_false()
+    {
+        using var fixture = ConnectionWizard.Create();
+
+        var result = Drive(fixture, Request(new ClickStep("Next")) with { Maintenance = true });
+
+        var next = result.Steps.ShouldHaveSingleItem();
+        next.Events.ShouldContain(new EventReport("SpawnWaitDialog", Wait, "READY = \"1\"", EventReports.WaitDialogOpened));
+        next.DialogsOpened.ShouldBe([Wait]);
+    }
+
+    [Fact]
+    public void A_wait_dialog_stays_closed_when_its_condition_already_holds()
+    {
+        using var fixture = ConnectionWizard.Create();
+        var request = Request(new ClickStep("Next")) with
+        {
+            Maintenance = true,
+            Properties = new Dictionary<string, string?> { ["READY"] = "1" },
+        };
+
+        var result = Drive(fixture, request);
+
+        var next = result.Steps.ShouldHaveSingleItem();
+        next.Events.ShouldContain(new EventReport("SpawnWaitDialog", Wait, "READY = \"1\"", EventReports.NoWait));
+        next.DialogsOpened.ShouldBeEmpty();
     }
 
     [Fact]

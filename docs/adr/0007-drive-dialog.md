@@ -67,7 +67,8 @@ Events while playing a click:
 | `[Property]` | `MsiFormatRecord` of the argument, then `MsiSetProperty` (empty value deletes the property) |
 | `DoAction` | `MsiDoAction`. A property-setting action runs. An action the restricted engine refuses is **not run**: if the caller gave `actionResults[action]` (property → value), those values are set instead and the step says so; otherwise the step reports it as *not run, outcome unknown* and the caller can try again with `actionResults` |
 | `NewDialog` | the page is replaced; following steps act on the new dialog |
-| `SpawnDialog`, `SpawnWaitDialog` | reported as opened (e.g. the error box), with its text formatted; the current page stays, as when the user closes the box |
+| `SpawnDialog` | reported as opened (e.g. the error box), with its text formatted; the current page stays, as when the user closes the box |
+| `SpawnWaitDialog` | its condition is what the box waits for, not whether the row plays: opened while the condition is false, skipped when it already holds (amended 2026-11-01 after the live check on a WiX package) |
 | `EndDialog` | reported (`Return`, `Exit`, `Retry`, `Ignore`); `Return` on the last page ends the wizard, later steps are an error |
 | `Reset`, `AddLocal`, `Remove`, `SetTargetPath`, `CheckTargetPath`, others | reported as *not played* in this version |
 
