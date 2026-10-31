@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <!-- Required by the LibraryImport source generator; our own code has no unsafe blocks. -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
