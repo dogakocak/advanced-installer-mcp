@@ -35,6 +35,9 @@ claude mcp add advinst -- "%LOCALAPPDATA%\advinst-mcp\AdvancedInstallerMcp.exe"
 | `build` | Builds an `.aip` with `AdvancedInstaller.com` and returns a structured result instead of the log: status, the exit code with its documented name, each build with the package it produced, build errors, and validator notes (`ERROR: AI_ICE…`, which do not fail a build) kept apart. Pass `builds` to run some builds, `rebuild` to skip the cache. Lines it does not recognise are returned, never dropped. |
 | `ping` | Checks that the server runs. |
 
+`lint_dialog`, `render_dialog` and `drive_dialog` read only the standard Windows Installer tables, so they work on
+any `.msi`, also one built with WiX or another tool; `build` is for Advanced Installer projects.
+
 How the measurement works and where its numbers come from: [ADR 0003](docs/adr/0003-installer-units-and-text-measurement.md)
 and the [control calibration](docs/research/2026-10-11-control-calibration.md). The layout rules and why they compare
 what controls paint instead of their rectangles: [ADR 0005](docs/adr/0005-dialog-layout-rules.md). How `build` runs
