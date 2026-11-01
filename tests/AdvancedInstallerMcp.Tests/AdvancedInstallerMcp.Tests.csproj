@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <!-- The server's manifest: Windows Installer sessions in tests must see the same Windows version. -->
+    <ApplicationManifest>..\..\src\AdvancedInstallerMcp\app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>

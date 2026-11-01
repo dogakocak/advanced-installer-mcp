@@ -28,6 +28,18 @@ public sealed class MsiSessionTests
         session.GetProperty("NOT_SET").ShouldBe("");
     }
 
+    // Needs the Windows 10 supportedOS entry in this process's manifest, as the server has: without it the engine
+    // sees version 6.2 and sets VersionNT = 602.
+    [Fact]
+    public void VersionNT_is_the_real_windows_version()
+    {
+        using var fixture = Package();
+        using var session = Open(fixture);
+
+        var os = Environment.OSVersion.Version;
+        session.GetProperty("VersionNT").ShouldBe((os.Major * 100 + os.Minor).ToString());
+    }
+
     [Fact]
     public void Conditions_see_properties_set_on_the_session()
     {
