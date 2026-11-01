@@ -47,6 +47,14 @@ every positive-sequence row whose condition holds, through `MsiDoAction`, skippi
 dialog whose condition holds. This is the state a person sees when the wizard's first page opens. The caller's
 `properties` are applied **before** the walk (command-line properties) — that is how msiexec does it.
 
+An action that fails or is cancelled ends the walk, as it ends the setup (amended 2026-11-01). The report says so;
+for `LaunchConditions` it names the first condition that is false and its formatted `Description`, the message
+msiexec shows. Without a `dialog` to start on, the call is an error carrying that message.
+
+The process must declare Windows 10 in its application manifest (`supportedOS`). Without it Windows reports version
+6.2 to the process and the engine sets `VersionNT = 602`, so every version condition differs from msiexec's; the
+live check on two real packages failed `LaunchConditions` this way (amended 2026-11-01).
+
 Windows Installer's own engine is the authority for conditions, formatting and built-in actions. The tool does not
 use our `ConditionEvaluator` for anything the engine can answer: feature and component states (`&Feature`), `~=`,
 version comparisons and directory properties come out exactly as msiexec computes them.

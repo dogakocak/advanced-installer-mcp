@@ -36,10 +36,13 @@ public sealed record EventReport(string Event, string Argument, string Condition
 public sealed record ControlChange(string Control, bool Visible, bool Enabled);
 
 // FirstPage: the first modal dialog of InstallUISequence whose condition holds; null when the sequence shows none.
+// Stopped: why the sequence ended before a page (an action failed, as LaunchConditions does when a condition is
+// false); msiexec shows the message and the setup ends there.
 public sealed record OpeningReport(
     string? FirstPage,
     IReadOnlyList<ActionReport> Actions,
-    IReadOnlyList<PropertyChange> Properties);
+    IReadOnlyList<PropertyChange> Properties,
+    string? Stopped = null);
 
 // Blocked: the click did nothing because the control is disabled or hidden.
 public sealed record StepReport(

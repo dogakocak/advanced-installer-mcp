@@ -46,6 +46,47 @@ public sealed class DialogDriverTests
         result.Opening.FirstPage.ShouldBe(Maint);
     }
 
+    private static TestPackage WithSqlLaunchCondition() =>
+        ConnectionWizard.Create()
+            .WithProperty("ProductName", "Contoso")
+            .WithLaunchCondition("SQL_PRESENT", "[ProductName] needs SQL Server.")
+            .WithUiSequence("LaunchConditions", 50);
+
+    [Fact]
+    public void A_failed_launch_condition_stops_the_wizard_with_its_message()
+    {
+        using var fixture = WithSqlLaunchCondition();
+
+        var error = Should.Throw<DriveException>(() => Drive(fixture, Request(new ClickStep("Next"))));
+
+        error.Message.ShouldContain("Contoso needs SQL Server.");
+    }
+
+    [Fact]
+    public void A_met_launch_condition_lets_the_wizard_open()
+    {
+        using var fixture = WithSqlLaunchCondition();
+        var request = Request() with { Properties = new Dictionary<string, string?> { ["SQL_PRESENT"] = "1" } };
+
+        var result = Drive(fixture, request);
+
+        result.Opening.Actions.ShouldContain(new ActionReport("LaunchConditions", ActionReports.Ran));
+        result.Opening.Stopped.ShouldBeNull();
+        result.Dialog.ShouldBe(Welcome);
+    }
+
+    [Fact]
+    public void A_named_dialog_is_still_played_after_the_wizard_stopped()
+    {
+        using var fixture = WithSqlLaunchCondition();
+
+        var result = Drive(fixture, Request() with { Dialog = Sql });
+
+        result.Opening.FirstPage.ShouldBeNull();
+        result.Opening.Stopped.ShouldNotBeNull().ShouldContain("Contoso needs SQL Server.");
+        result.Dialog.ShouldBe(Sql);
+    }
+
     [Fact]
     public void A_wait_dialog_opens_while_its_condition_is_false()
     {

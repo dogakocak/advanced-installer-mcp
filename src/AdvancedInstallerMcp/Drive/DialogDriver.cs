@@ -47,8 +47,9 @@ public static class DialogDriver
             }
 
             var opening = Open();
-            var dialog = request.Dialog ?? opening.FirstPage ?? throw new DriveException(
-                "The UI sequence shows no page. Name the dialog to start on.");
+            var dialog = request.Dialog ?? opening.FirstPage ?? throw new DriveException(opening.Stopped is { } stopped
+                ? $"The wizard never opens: {stopped} Set the properties that meet it, or name the dialog to start on."
+                : "The UI sequence shows no page. Name the dialog to start on.");
             var current = FindDialog(dialog);
 
             string? ended = null;
@@ -70,12 +71,14 @@ public static class DialogDriver
         }
 
         // InstallUISequence from the start, as msiexec runs it before the first page: actions whose condition holds,
-        // modeless dialogs skipped, up to the first modal dialog whose condition holds.
+        // modeless dialogs skipped, up to the first modal dialog whose condition holds. A failed or cancelled action
+        // ends the sequence, as it ends the setup in msiexec.
         private OpeningReport Open()
         {
             var before = Snapshot();
             var actions = new List<ActionReport>();
             string? firstPage = null;
+            string? stopped = null;
 
             foreach (var row in tables.UiSequence)
             {
@@ -100,11 +103,29 @@ public static class DialogDriver
                     continue;
                 }
 
-                actions.Add(new ActionReport(row.Action, DoAction(row.Action)));
+                var outcome = DoAction(row.Action);
+                actions.Add(new ActionReport(row.Action, outcome));
+                if (outcome is ActionReports.Failed or ActionReports.Cancelled)
+                {
+                    stopped = Stop(row.Action, outcome);
+                    break;
+                }
             }
 
             _hidden = HiddenProperties();
-            return new OpeningReport(firstPage, actions, Changes(before, Snapshot()));
+            return new OpeningReport(firstPage, actions, Changes(before, Snapshot()), stopped);
+        }
+
+        private string Stop(string action, string outcome)
+        {
+            if (action == "LaunchConditions" &&
+                tables.LaunchConditions.FirstOrDefault(c => session.EvaluateCondition(c.Condition) == false) is { } unmet)
+            {
+                return $"LaunchConditions failed on \"{unmet.Condition}\"; msiexec shows \"{session.Format(unmet.Description)}\" " +
+                    "and the setup ends.";
+            }
+
+            return $"{action} {outcome}; the setup ends there.";
         }
 
         private (StepReport Report, Dialog Next, string? Ended) PlayStep(DriveStep step, Dialog dialog)

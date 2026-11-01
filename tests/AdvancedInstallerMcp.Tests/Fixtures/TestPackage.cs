@@ -18,6 +18,7 @@ public sealed class TestPackage : IDisposable
     private readonly List<object?[]> _customActions = [];
     private readonly List<object?[]> _controlEvents = [];
     private readonly List<object?[]> _uiSequence = [];
+    private readonly List<object?[]> _launchConditions = [];
     private bool _withUiTables = true;
     private bool _installPackage;
 
@@ -53,6 +54,12 @@ public sealed class TestPackage : IDisposable
     public TestPackage WithUiSequence(string action, int sequence, string? condition = null)
     {
         _uiSequence.Add([action, condition, sequence]);
+        return this;
+    }
+
+    public TestPackage WithLaunchCondition(string condition, string description)
+    {
+        _launchConditions.Add([condition, description]);
         return this;
     }
 
@@ -142,6 +149,17 @@ public sealed class TestPackage : IDisposable
                 foreach (var row in _uiSequence)
                 {
                     database.Execute("INSERT INTO `InstallUISequence` (`Action`, `Condition`, `Sequence`) VALUES (?, ?, ?)", row);
+                }
+            }
+
+            if (_launchConditions.Count > 0)
+            {
+                database.Execute(
+                    "CREATE TABLE `LaunchCondition` (`Condition` CHAR(255) NOT NULL, `Description` CHAR(255) NOT NULL " +
+                    "LOCALIZABLE PRIMARY KEY `Condition`)");
+                foreach (var row in _launchConditions)
+                {
+                    database.Execute("INSERT INTO `LaunchCondition` (`Condition`, `Description`) VALUES (?, ?)", row);
                 }
             }
 

@@ -7,6 +7,8 @@ public sealed record ControlEventRow(string Dialog, string Control, string Event
 
 public sealed record SequenceRow(string Action, string Condition, int Sequence);
 
+public sealed record LaunchConditionRow(string Condition, string Description);
+
 // The tables drive_dialog plays from, read once per call.
 public sealed partial class DriveTables
 {
@@ -27,17 +29,21 @@ public sealed partial class DriveTables
         IReadOnlyDictionary<string, int> customActionTypes,
         IReadOnlyList<ControlEventRow> events,
         IReadOnlyList<SequenceRow> uiSequence,
+        IReadOnlyList<LaunchConditionRow> launchConditions,
         IReadOnlySet<string> propertyNames)
     {
         _dialogAttributes = dialogAttributes;
         _customActionTypes = customActionTypes;
         _events = events.ToLookup(e => (e.Dialog, e.Control));
         UiSequence = uiSequence;
+        LaunchConditions = launchConditions;
         PropertyNames = propertyNames;
     }
 
     // Positive sequence numbers in order; negative ones are the exit dialogs, 0 never runs.
     public IReadOnlyList<SequenceRow> UiSequence { get; }
+
+    public IReadOnlyList<LaunchConditionRow> LaunchConditions { get; }
 
     // Every property the package's UI logic reads or writes: the Property table, controls' properties, [Property]
     // events and references, property-setting custom actions and the names in conditions. Changes are reported for
@@ -90,6 +96,11 @@ public sealed partial class DriveTables
             AddConditionNames(names, row.Condition);
         }
 
+        var launchConditions = database.HasTable("LaunchCondition")
+            ? database.Query("SELECT `Condition`, `Description` FROM `LaunchCondition`",
+                r => new LaunchConditionRow(r.GetString(1), r.GetString(2)))
+            : [];
+
         if (database.HasTable("Property"))
         {
             names.UnionWith(database.Query("SELECT `Property` FROM `Property`", r => r.GetString(1)));
@@ -121,6 +132,7 @@ public sealed partial class DriveTables
             customActions.ToDictionary(a => a.Action, a => a.Type, StringComparer.Ordinal),
             events,
             uiSequence,
+            launchConditions,
             names);
     }
 
