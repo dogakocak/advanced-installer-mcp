@@ -1,0 +1,151 @@
+{
+  "source": "Advanced Installer 24.1, new project (default type), dialog FolderDlg; banner picture not copied",
+  "width": 370,
+  "height": 270,
+  "title": "[ProductName] [Setup]",
+  "firstControl": "Next",
+  "defaultControl": "Next",
+  "cancelControl": "Cancel",
+  "bannerTitle": "Title",
+  "bannerText": "Description",
+  "bannerBitmap": "BannerBitmap",
+  "bodyTop": 52,
+  "bodyBottom": 226,
+  "properties": {
+    "BannerBitmap": "banner.jpg",
+    "ButtonText_Back": "< &Back",
+    "ButtonText_Cancel": "Cancel",
+    "ButtonText_Next": "&Next >",
+    "DefaultUIFont": "DlgFont8",
+    "DlgTitleFont": "{\\DlgFontBold8}",
+    "ProductName": "Your Application",
+    "Setup": "Setup"
+  },
+  "textStyles": [
+    {
+      "name": "DlgFont8",
+      "faceName": "Tahoma",
+      "size": 8,
+      "color": 0,
+      "styleBits": 0
+    },
+    {
+      "name": "DlgFontBold8",
+      "faceName": "Tahoma",
+      "size": 8,
+      "color": 0,
+      "styleBits": 1
+    }
+  ],
+  "controls": [
+    {
+      "name": "Title",
+      "type": "Text",
+      "x": 15,
+      "y": 6,
+      "width": 200,
+      "height": 15,
+      "attributes": 196611,
+      "property": null,
+      "text": "[DlgTitleFont][MockBannerTitle]",
+      "next": "Description"
+    },
+    {
+      "name": "Description",
+      "type": "Text",
+      "x": 25,
+      "y": 23,
+      "width": 280,
+      "height": 20,
+      "attributes": 196611,
+      "property": null,
+      "text": "[MockBannerText]",
+      "next": "BannerLine"
+    },
+    {
+      "name": "Next",
+      "type": "PushButton",
+      "x": 236,
+      "y": 243,
+      "width": 56,
+      "height": 17,
+      "attributes": 3,
+      "property": null,
+      "text": "[ButtonText_Next]",
+      "next": "BottomLine"
+    },
+    {
+      "name": "BottomLine",
+      "type": "Line",
+      "x": 5,
+      "y": 234,
+      "width": 368,
+      "height": 0,
+      "attributes": 1,
+      "property": null,
+      "text": "",
+      "next": "Logo"
+    },
+    {
+      "name": "Logo",
+      "type": "Text",
+      "x": 4,
+      "y": 228,
+      "width": 70,
+      "height": 12,
+      "attributes": 1,
+      "property": null,
+      "text": "Advanced Installer",
+      "next": "Cancel"
+    },
+    {
+      "name": "Cancel",
+      "type": "PushButton",
+      "x": 304,
+      "y": 243,
+      "width": 56,
+      "height": 17,
+      "attributes": 3,
+      "property": null,
+      "text": "[ButtonText_Cancel]",
+      "next": "Back"
+    },
+    {
+      "name": "Back",
+      "type": "PushButton",
+      "x": 180,
+      "y": 243,
+      "width": 56,
+      "height": 17,
+      "attributes": 3,
+      "property": null,
+      "text": "[ButtonText_Back]",
+      "next": "BannerBitmap"
+    },
+    {
+      "name": "BannerBitmap",
+      "type": "Bitmap",
+      "x": 0,
+      "y": 0,
+      "width": 370,
+      "height": 44,
+      "attributes": 1048577,
+      "property": null,
+      "text": "[BannerBitmap]",
+      "next": "Title"
+    },
+    {
+      "name": "BannerLine",
+      "type": "Line",
+      "x": 0,
+      "y": 44,
+      "width": 372,
+      "height": 0,
+      "attributes": 1,
+      "property": null,
+      "text": "",
+      "next": "Next"
+    }
+  ],
+  "bannerBinary": "banner.jpg"
+}
