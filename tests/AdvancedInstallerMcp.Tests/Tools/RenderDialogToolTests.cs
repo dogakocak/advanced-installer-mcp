@@ -98,4 +98,22 @@ public sealed class RenderDialogToolTests
         Should.Throw<McpException>(() => RenderDialogTool.RenderDialog(fixture.Path, ConnectionDialogs.Fixed, outputPath: "dialog.png"))
             .Message.ShouldContain("full path");
     }
+
+    [Fact]
+    public void An_output_path_below_a_file_is_an_mcp_error()
+    {
+        using var fixture = ConnectionDialogs.Create();
+        fixture.Build().Dispose();
+        var file = Path.Combine(Path.GetTempPath(), $"render-blocker-{Guid.NewGuid():N}");
+        File.WriteAllText(file, "x");
+        try
+        {
+            Should.Throw<McpException>(() => RenderDialogTool.RenderDialog(
+                fixture.Path, ConnectionDialogs.Fixed, outputPath: Path.Combine(file, "dialog.png")));
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
 }

@@ -6,12 +6,12 @@ namespace AdvancedInstallerMcp.Mock;
 // and ControlCondition tables, with their column names. Description and Rationale are not table data; they only go
 // on the approval page.
 public sealed record MockSpec(
-    [property: Description("Property rows: name → default value. Inputs without a row start empty.")]
-    Dictionary<string, string>? Properties,
-    [property: Description("Extra TextStyle rows. The wizard frame brings Advanced Installer's own.")]
-    IReadOnlyList<MockTextStyle>? TextStyles,
     [property: Description("The proposed pages, in wizard order.")]
-    IReadOnlyList<MockDialogSpec> Dialogs);
+    IReadOnlyList<MockDialogSpec> Dialogs,
+    [property: Description("Property rows: name → default value. Inputs without a row start empty.")]
+    Dictionary<string, string>? Properties = null,
+    [property: Description("Extra TextStyle rows. The wizard frame brings Advanced Installer's own.")]
+    IReadOnlyList<MockTextStyle>? TextStyles = null);
 
 public sealed record MockTextStyle(string Name, string FaceName, int Size, int? Color = null, int? StyleBits = null);
 

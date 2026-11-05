@@ -6,8 +6,8 @@ namespace AdvancedInstallerMcp.Tests.Mock;
 public sealed class ApprovalPageTests
 {
     private static readonly MockSpec Spec = new(
-        new Dictionary<string, string> { ["CERT_MODE"] = "pfx" },
-        null,
+        Properties: new Dictionary<string, string> { ["CERT_MODE"] = "pfx" },
+        Dialogs:
         [new MockDialogSpec("CertificateDlg",
             [
                 new MockControl("Mode", "RadioButtonGroup", 20, 60, 300, 30, Property: "CERT_MODE", Rationale: "Two fixed choices.",

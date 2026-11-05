@@ -3,14 +3,24 @@ using AdvancedInstallerMcp.Mock;
 using AdvancedInstallerMcp.Tools;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace AdvancedInstallerMcp.Tests.Tools;
 
 public sealed class MockDialogToolTests
 {
+    [Fact]
+    public void Only_dialogs_is_required_in_the_spec_schema()
+    {
+        var tool = McpServerTool.Create(typeof(MockDialogTool).GetMethod(nameof(MockDialogTool.MockDialog))!);
+
+        var spec = tool.ProtocolTool.InputSchema.GetProperty("properties").GetProperty("spec");
+        spec.GetProperty("required").EnumerateArray().Select(e => e.GetString()).ShouldBe(["dialogs"]);
+    }
+
     private static readonly MockSpec Spec = new(
-        new Dictionary<string, string> { ["MODE"] = "a" },
-        null,
+        Properties: new Dictionary<string, string> { ["MODE"] = "a" },
+        Dialogs:
         [
             new MockDialogSpec("FirstDlg", [new MockControl("Mode", "RadioButtonGroup", 20, 60, 300, 30, Property: "MODE",
                 Items: [new MockItem("a", "&First"), new MockItem("b", "&Second")])], BannerTitle: "One"),

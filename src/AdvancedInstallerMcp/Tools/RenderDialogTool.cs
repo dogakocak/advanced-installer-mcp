@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using AdvancedInstallerMcp.Dialogs;
 using AdvancedInstallerMcp.Render;
 using ModelContextProtocol;
@@ -58,8 +57,15 @@ public static class RenderDialogTool
         if (outputPath is not null)
         {
             savedTo = Path.GetFullPath(outputPath);
-            Directory.CreateDirectory(Path.GetDirectoryName(savedTo)!);
-            File.WriteAllBytes(savedTo, rendered.Png);
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(savedTo)!);
+                File.WriteAllBytes(savedTo, rendered.Png);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                throw new McpException($"render_dialog could not write the picture: {exception.Message}", exception);
+            }
         }
 
         var report = JsonSerializer.SerializeToNode(rendered.Report, ReportJson)!.AsObject();

@@ -8,8 +8,8 @@ namespace AdvancedInstallerMcp.Tests.Mock;
 public sealed class MockPackageBuilderTests
 {
     private static readonly MockSpec Spec = new(
-        new Dictionary<string, string> { ["MODE"] = "a" },
-        null,
+        Properties: new Dictionary<string, string> { ["MODE"] = "a" },
+        Dialogs:
         [new MockDialogSpec("PageDlg",
             [
                 new MockControl("Mode", "RadioButtonGroup", 20, 60, 300, 30, Property: "MODE",
@@ -72,7 +72,7 @@ public sealed class MockPackageBuilderTests
     {
         MockControl Mode(string name) => new(name, "RadioButtonGroup", 20, 60, 300, 30, Property: "MODE",
             Items: [new MockItem("a", "&First"), new MockItem("b", "&Second")]);
-        var spec = new MockSpec(null, null, [new MockDialogSpec("OneDlg", [Mode("ModeOne")]), new MockDialogSpec("TwoDlg", [Mode("ModeTwo")])]);
+        var spec = new MockSpec([new MockDialogSpec("OneDlg", [Mode("ModeOne")]), new MockDialogSpec("TwoDlg", [Mode("ModeTwo")])]);
 
         MockSpecValidator.Problems(spec).ShouldBeEmpty();
         MockPackageBuilder.Build(spec).RadioButtons.Count.ShouldBe(2);

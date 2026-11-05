@@ -5,7 +5,7 @@ namespace AdvancedInstallerMcp.Tests.Mock;
 // ADR 0008 "Validation".
 public sealed class MockSpecValidatorTests
 {
-    private static MockSpec Page(params MockControl[] controls) => new(null, null, [new MockDialogSpec("PageDlg", controls)]);
+    private static MockSpec Page(params MockControl[] controls) => new([new MockDialogSpec("PageDlg", controls)]);
 
     [Fact]
     public void A_plain_page_is_valid()
@@ -65,7 +65,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void Condition_must_name_a_control_and_a_known_action()
     {
-        var spec = new MockSpec(null, null, [new MockDialogSpec("PageDlg",
+        var spec = new MockSpec([new MockDialogSpec("PageDlg",
             [new MockControl("Host", "Edit", 20, 60, 200, 18, Property: "HOST")],
             Conditions: [new MockCondition("Nope", "Disable", "1"), new MockCondition("Host", "Grey", "1")])]);
 
@@ -79,7 +79,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void Duplicate_dialogs_and_an_unknown_frame_are_refused()
     {
-        var spec = new MockSpec(null, null, [
+        var spec = new MockSpec([
             new MockDialogSpec("PageDlg", []),
             new MockDialogSpec("PageDlg", [], Frame: "fancy")]);
 
@@ -93,7 +93,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void Every_problem_on_different_dialogs_is_listed()
     {
-        var spec = new MockSpec(null, null, [
+        var spec = new MockSpec([
             new MockDialogSpec("OneDlg", [new MockControl("A", "ToggleSwitch", 0, 60, 10, 10)]),
             new MockDialogSpec("TwoDlg", [new MockControl("B", "Edit", 0, 60, 10, 10, Property: "lower")]),
             new MockDialogSpec("Bad Name", [], Frame: "fancy")]);
@@ -127,13 +127,13 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void Null_dialogs_give_a_problem()
     {
-        MockSpecValidator.Problems(new MockSpec(null, null, null!)).ShouldHaveSingleItem().ShouldContain("dialogs");
+        MockSpecValidator.Problems(new MockSpec(null!)).ShouldHaveSingleItem().ShouldContain("dialogs");
     }
 
     [Fact]
     public void Null_elements_are_listed_and_skipped()
     {
-        var spec = new MockSpec(null, [null!], [
+        var spec = new MockSpec(TextStyles: [null!], Dialogs: [
             null!,
             new MockDialogSpec("PageDlg", [null!, new MockControl("Mode", "RadioButtonGroup", 0, 60, 10, 10,
                 Property: "MODE", Items: [null!, new MockItem(null!)])],
@@ -153,7 +153,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void Null_names_types_and_controls_are_problems_not_exceptions()
     {
-        var spec = new MockSpec(null, [new MockTextStyle(null!, "Tahoma", 8)], [
+        var spec = new MockSpec(TextStyles: [new MockTextStyle(null!, "Tahoma", 8)], Dialogs: [
             new MockDialogSpec(null!, null!),
             new MockDialogSpec("PageDlg", [
                 new MockControl(null!, "Text", 0, 60, 10, 10),
@@ -170,16 +170,16 @@ public sealed class MockSpecValidatorTests
     public void A_null_frame_means_wizard()
     {
         var dialog = new MockDialogSpec("PageDlg", [new MockControl("Host", "Edit", 0, 60, 10, 10, Property: "HOST")]) { Frame = null! };
-        MockSpecValidator.Problems(new MockSpec(null, null, [dialog])).ShouldBeEmpty();
+        MockSpecValidator.Problems(new MockSpec([dialog])).ShouldBeEmpty();
 
         var clash = new MockDialogSpec("PageDlg", [new MockControl(WizardFrame.Load().DefaultControl, "Text", 0, 60, 10, 10)]) { Frame = null! };
-        MockSpecValidator.Problems(new MockSpec(null, null, [clash])).ShouldHaveSingleItem().ShouldContain("wizard frame");
+        MockSpecValidator.Problems(new MockSpec([clash])).ShouldHaveSingleItem().ShouldContain("wizard frame");
     }
 
     [Fact]
     public void Frame_none_allows_a_frame_control_name()
     {
-        var spec = new MockSpec(null, null, [new MockDialogSpec("PageDlg",
+        var spec = new MockSpec([new MockDialogSpec("PageDlg",
             [new MockControl(WizardFrame.Load().DefaultControl, "PushButton", 0, 60, 56, 17, Text: "Go")], Frame: "none")]);
 
         MockSpecValidator.Problems(spec).ShouldBeEmpty();
@@ -188,7 +188,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void Empty_or_null_property_values_are_refused()
     {
-        var spec = new MockSpec(new Dictionary<string, string> { ["A_EMPTY"] = "", ["B_NULL"] = null! }, null,
+        var spec = new MockSpec(Properties: new Dictionary<string, string> { ["A_EMPTY"] = "", ["B_NULL"] = null! }, Dialogs:
             [new MockDialogSpec("PageDlg", [new MockControl("Host", "Edit", 20, 60, 200, 18, Property: "HOST")])]);
 
         var problems = MockSpecValidator.Problems(spec);
@@ -209,7 +209,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void An_empty_or_null_face_name_is_refused()
     {
-        var spec = new MockSpec(null, [new MockTextStyle("OneFont", "", 8), new MockTextStyle("TwoFont", null!, 8)],
+        var spec = new MockSpec(TextStyles: [new MockTextStyle("OneFont", "", 8), new MockTextStyle("TwoFont", null!, 8)], Dialogs:
             [new MockDialogSpec("PageDlg", [])]);
 
         var problems = MockSpecValidator.Problems(spec);
@@ -222,7 +222,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void An_empty_or_null_condition_text_is_refused()
     {
-        var spec = new MockSpec(null, null, [new MockDialogSpec("PageDlg",
+        var spec = new MockSpec([new MockDialogSpec("PageDlg",
             [new MockControl("Host", "Edit", 20, 60, 200, 18, Property: "HOST")],
             Conditions: [new MockCondition("Host", "Hide", ""), new MockCondition("Host", "Show", null!)])]);
 
@@ -235,7 +235,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void Two_identical_condition_rows_are_refused()
     {
-        var spec = new MockSpec(null, null, [new MockDialogSpec("PageDlg",
+        var spec = new MockSpec([new MockDialogSpec("PageDlg",
             [new MockControl("Host", "Edit", 20, 60, 200, 18, Property: "HOST")],
             Conditions: [new MockCondition("Host", "Hide", "X=1"), new MockCondition("Host", "Hide", "X=1"), new MockCondition("Host", "Hide", "X=2")])]);
 
@@ -245,20 +245,20 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void Frame_none_without_controls_is_refused()
     {
-        MockSpecValidator.Problems(new MockSpec(null, null, [new MockDialogSpec("PageDlg", [], Frame: "none")]))
+        MockSpecValidator.Problems(new MockSpec([new MockDialogSpec("PageDlg", [], Frame: "none")]))
             .ShouldHaveSingleItem().ShouldContain("no controls");
     }
 
     [Fact]
     public void No_dialogs_is_refused()
     {
-        MockSpecValidator.Problems(new MockSpec(null, null, [])).ShouldHaveSingleItem().ShouldContain("nothing to draw");
+        MockSpecValidator.Problems(new MockSpec([])).ShouldHaveSingleItem().ShouldContain("nothing to draw");
     }
 
     [Fact]
     public void Dialog_names_that_differ_only_in_case_are_refused()
     {
-        var spec = new MockSpec(null, null, [new MockDialogSpec("PageDlg", []), new MockDialogSpec("pagedlg", [])]);
+        var spec = new MockSpec([new MockDialogSpec("PageDlg", []), new MockDialogSpec("pagedlg", [])]);
 
         MockSpecValidator.Problems(spec).ShouldHaveSingleItem().ShouldContain("differ only in case");
     }
@@ -266,7 +266,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void The_same_items_property_with_different_items_is_refused_naming_both_places()
     {
-        var spec = new MockSpec(null, null, [
+        var spec = new MockSpec([
             new MockDialogSpec("OneDlg", [new MockControl("Mode", "RadioButtonGroup", 20, 60, 200, 40, Property: "MODE",
                 Items: [new MockItem("a"), new MockItem("b")])]),
             new MockDialogSpec("TwoDlg", [new MockControl("Mode2", "RadioButtonGroup", 20, 60, 200, 40, Property: "MODE",
@@ -281,7 +281,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void The_same_items_property_with_identical_items_is_allowed()
     {
-        var spec = new MockSpec(null, null, [
+        var spec = new MockSpec([
             new MockDialogSpec("OneDlg", [new MockControl("Mode", "RadioButtonGroup", 20, 60, 200, 40, Property: "MODE",
                 Items: [new MockItem("a", "A"), new MockItem("b", "B")])]),
             new MockDialogSpec("TwoDlg", [new MockControl("Mode2", "RadioButtonGroup", 20, 60, 200, 40, Property: "MODE",
@@ -293,7 +293,7 @@ public sealed class MockSpecValidatorTests
     [Fact]
     public void A_radio_group_and_a_combo_on_one_property_do_not_clash()
     {
-        var spec = new MockSpec(null, null, [new MockDialogSpec("OneDlg", [
+        var spec = new MockSpec([new MockDialogSpec("OneDlg", [
             new MockControl("Mode", "RadioButtonGroup", 20, 60, 200, 40, Property: "MODE", Items: [new MockItem("a")]),
             new MockControl("Mode2", "ComboBox", 20, 120, 200, 18, Property: "MODE", Items: [new MockItem("b")])])]);
 
