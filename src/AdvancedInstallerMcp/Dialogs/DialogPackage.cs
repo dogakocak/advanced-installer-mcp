@@ -97,6 +97,23 @@ public sealed class DialogPackage
         return _radioButtons[property].ToList();
     }
 
+    private ILookup<string, ListItem>? _comboItems;
+
+    // The entries of the ComboBox list tied to this property, in their Order.
+    public IReadOnlyList<ListItem> ComboItems(string property)
+    {
+        _comboItems ??= _database.HasTable("ComboBox")
+            ? _database.Query(
+                    "SELECT `Property`, `Order`, `Value`, `Text` FROM `ComboBox`",
+                    r => (Property: r.GetString(1), Order: r.GetInteger(2) ?? 0,
+                        Item: new ListItem(r.GetString(3), r.GetString(4) is { Length: > 0 } text ? text : r.GetString(3))))
+                .OrderBy(i => i.Order)
+                .ToLookup(i => i.Property, i => i.Item, StringComparer.Ordinal)
+            : Enumerable.Empty<ListItem>().ToLookup(_ => "", StringComparer.Ordinal);
+
+        return _comboItems[property].ToList();
+    }
+
     // The Binary row's data (a picture for a Bitmap or Icon control), or null when there is no such row.
     public byte[]? ReadBinary(string name) =>
         _database.HasTable("Binary")

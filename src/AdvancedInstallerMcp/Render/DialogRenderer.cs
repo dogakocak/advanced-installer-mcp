@@ -104,6 +104,10 @@ public static class DialogRenderer
         return new RenderedDialog(png.ToArray(), report);
     }
 
+    // A list-only combo shows the selected entry's Text; a value with no entry (typed into an editable combo) as is.
+    internal static string ComboText(DialogPackage package, string? property, string value) =>
+        property is null ? value : package.ComboItems(property).FirstOrDefault(i => i.Value == value)?.Text ?? value;
+
     private sealed class Painter(DialogPackage package, DialogState state, int dpi) : IDisposable
     {
         private readonly Dictionary<(string Face, int Size, TextStyleBits Bits), FontHandle> _fonts = [];
@@ -426,7 +430,7 @@ public static class DialogRenderer
             NativeMethods.DrawThemeBackground(ComboTheme, dc, NativeMethods.CpDropDownButtonRight, NativeMethods.CbxsNormal, ref arrow, 0);
 
             var text = Inset(rect with { Right = arrow.Left }, Scale(3));
-            DrawValue(dc, PropertyValue(control.Property), text,
+            DrawValue(dc, ComboText(package, control.Property, PropertyValue(control.Property)), text,
                 NativeMethods.DtNoPrefix | NativeMethods.DtSingleLine | NativeMethods.DtVCenter | NativeMethods.DtEndEllipsis, enabled);
         }
 

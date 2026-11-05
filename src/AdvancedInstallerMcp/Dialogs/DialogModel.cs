@@ -46,6 +46,9 @@ public sealed record ControlConditionRow(string Control, string Action, string C
 // A row of the RadioButton table: one button of the RadioButtonGroup whose Property matches, placed relative to the group.
 public sealed record RadioButton(string Value, int X, int Y, int Width, int Height, string Text);
 
+// A row of the ComboBox or ListBox table: one entry of the list tied to Property. Text is the Value when empty.
+public sealed record ListItem(string Value, string Text);
+
 public sealed record TextStyle(string Name, string FaceName, int Size, int? Color, TextStyleBits Bits);
 
 [Flags]

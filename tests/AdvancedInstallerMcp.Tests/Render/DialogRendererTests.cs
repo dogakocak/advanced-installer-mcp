@@ -165,4 +165,16 @@ public sealed class DialogRendererTests
             Enumerable.Range(area.Top, area.Height)
                 .Sum(y => Enumerable.Range(area.Left, area.Width).Count(x => image.GetPixel(x, y).GetBrightness() < 0.5f));
     }
+
+    [Fact]
+    public void A_combo_box_shows_the_text_of_the_selected_item()
+    {
+        using var fixture = new TestPackage().WithComboItem("MODE", 1, "pfx", "PFX file").WithComboItem("MODE", 2, "raw");
+        using var database = fixture.Build();
+        var package = DialogPackage.Load(database);
+
+        DialogRenderer.ComboText(package, "MODE", "pfx").ShouldBe("PFX file");
+        DialogRenderer.ComboText(package, "MODE", "raw").ShouldBe("raw");      // no Text: the value
+        DialogRenderer.ComboText(package, "MODE", "typed").ShouldBe("typed");  // editable combo: what was typed
+    }
 }

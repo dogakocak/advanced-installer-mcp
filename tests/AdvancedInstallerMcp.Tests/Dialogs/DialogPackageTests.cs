@@ -88,4 +88,27 @@ public sealed class DialogPackageTests
         DialogPackage.Load(database).ControlConditions(ConnectionDialogs.Broken)
             .ShouldBe([new ControlConditionRow("Hint", "Hide", "DB_SERVER")]);
     }
+
+    [Fact]
+    public void Combo_items_come_in_their_order()
+    {
+        using var fixture = new TestPackage()
+            .WithComboItem("MODE", 2, "b", "Second")
+            .WithComboItem("MODE", 1, "a", "First")
+            .WithComboItem("OTHER", 1, "x");
+        using var database = fixture.Build();
+
+        var items = DialogPackage.Load(database).ComboItems("MODE");
+
+        items.ShouldBe([new ListItem("a", "First"), new ListItem("b", "Second")]);
+    }
+
+    [Fact]
+    public void Combo_items_of_a_package_without_the_table_are_empty()
+    {
+        using var fixture = new TestPackage();
+        using var database = fixture.Build();
+
+        DialogPackage.Load(database).ComboItems("MODE").ShouldBeEmpty();
+    }
 }
