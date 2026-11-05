@@ -1,7 +1,7 @@
 # ADR 0009 — lint rules for setup inputs that must also work unattended
 
 - Date: 2026-11-05
-- Status: Proposed
+- Status: Accepted
 
 ## Context
 

@@ -1,7 +1,7 @@
 # ADR 0008 — mock_dialog: proposed setup pages as real MSI rows, shown before the project changes
 
 - Date: 2026-11-05
-- Status: Proposed
+- Status: Accepted
 
 ## Context
 
