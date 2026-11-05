@@ -8,6 +8,9 @@ public enum Severity
     // Depends on the scale (wrong only at 125 % or 150 %), on a ControlCondition, or on what the package does at run
     // time; or a package setting that makes the other results less certain.
     Warning,
+
+    // A suggestion: a different control or setting would serve the user better; nothing is broken.
+    Info,
 }
 
 // One DPI's measurement for a text check, in pixels.

@@ -24,6 +24,11 @@ public sealed class DialogPackage
 
     public IReadOnlyDictionary<string, string> Properties { get; }
 
+    private InstallUsage? _installUsage;
+
+    // Which properties the execute side uses (ADR 0009). Read on first use: it scans every non-UI table.
+    public InstallUsage InstallUsage => _installUsage ??= InstallUsage.Read(_database);
+
     public IReadOnlyDictionary<string, TextStyle> TextStyles { get; }
 
     public IReadOnlyList<string> DialogNames { get; }
