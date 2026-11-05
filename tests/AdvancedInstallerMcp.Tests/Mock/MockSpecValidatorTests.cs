@@ -58,6 +58,8 @@ public sealed class MockSpecValidatorTests
             new MockControl("Mode", "RadioButtonGroup", 20, 90, 200, 40, Property: "MODE")));
 
         problems.Count.ShouldBe(2);
+        problems.ShouldContain(p => p.Contains("Host") && p.Contains("only RadioButtonGroup, ComboBox and ListBox take items"));
+        problems.ShouldContain(p => p.Contains("Mode") && p.Contains("needs its buttons in 'items'"));
     }
 
     [Fact]
@@ -67,7 +69,11 @@ public sealed class MockSpecValidatorTests
             [new MockControl("Host", "Edit", 20, 60, 200, 18, Property: "HOST")],
             Conditions: [new MockCondition("Nope", "Disable", "1"), new MockCondition("Host", "Grey", "1")])]);
 
-        MockSpecValidator.Problems(spec).Count.ShouldBe(2);
+        var problems = MockSpecValidator.Problems(spec);
+
+        problems.Count.ShouldBe(2);
+        problems.ShouldContain(p => p.Contains("'Nope'") && p.Contains("not on the page"));
+        problems.ShouldContain(p => p.Contains("'Grey'") && p.Contains("condition action"));
     }
 
     [Fact]
@@ -77,6 +83,105 @@ public sealed class MockSpecValidatorTests
             new MockDialogSpec("PageDlg", []),
             new MockDialogSpec("PageDlg", [], Frame: "fancy")]);
 
-        MockSpecValidator.Problems(spec).Count.ShouldBe(2);
+        var problems = MockSpecValidator.Problems(spec);
+
+        problems.Count.ShouldBe(2);
+        problems.ShouldContain(p => p.Contains("Dialog 'PageDlg' appears 2 times"));
+        problems.ShouldContain(p => p.Contains("frame 'fancy'"));
+    }
+
+    [Fact]
+    public void Every_problem_on_different_dialogs_is_listed()
+    {
+        var spec = new MockSpec(null, null, [
+            new MockDialogSpec("OneDlg", [new MockControl("A", "ToggleSwitch", 0, 60, 10, 10)]),
+            new MockDialogSpec("TwoDlg", [new MockControl("B", "Edit", 0, 60, 10, 10, Property: "lower")]),
+            new MockDialogSpec("Bad Name", [], Frame: "fancy")]);
+
+        var problems = MockSpecValidator.Problems(spec);
+
+        problems.Count.ShouldBe(4);
+        problems.ShouldContain(p => p.Contains("ToggleSwitch"));
+        problems.ShouldContain(p => p.Contains("upper case"));
+        problems.ShouldContain(p => p.Contains("Bad Name") && p.Contains("identifier"));
+        problems.ShouldContain(p => p.Contains("fancy"));
+    }
+
+    [Fact]
+    public void Unknown_type_still_gets_the_property_and_items_checks()
+    {
+        var problems = MockSpecValidator.Problems(Page(
+            new MockControl("Odd", "ToggleSwitch", 0, 60, 10, 10, Property: "bad name", Items: [new MockItem("x")])));
+
+        problems.ShouldContain(p => p.Contains("ToggleSwitch"));
+        problems.ShouldContain(p => p.Contains("bad name") && p.Contains("identifier"));
+    }
+
+    [Fact]
+    public void A_trailing_newline_is_not_an_identifier()
+    {
+        MockSpecValidator.Problems(Page(new MockControl("Host\n", "Text", 0, 60, 10, 10)))
+            .ShouldHaveSingleItem().ShouldContain("identifier");
+    }
+
+    [Fact]
+    public void Null_dialogs_give_a_problem()
+    {
+        MockSpecValidator.Problems(new MockSpec(null, null, null!)).ShouldHaveSingleItem().ShouldContain("dialogs");
+    }
+
+    [Fact]
+    public void Null_elements_are_listed_and_skipped()
+    {
+        var spec = new MockSpec(null, [null!], [
+            null!,
+            new MockDialogSpec("PageDlg", [null!, new MockControl("Mode", "RadioButtonGroup", 0, 60, 10, 10,
+                Property: "MODE", Items: [null!, new MockItem(null!)])],
+                Conditions: [null!])]);
+
+        var problems = MockSpecValidator.Problems(spec);
+
+        problems.Count.ShouldBe(6);
+        problems.ShouldContain(p => p.Contains("text style entry is null"));
+        problems.ShouldContain(p => p.Contains("dialog entry is null"));
+        problems.ShouldContain(p => p.Contains("control entry is null"));
+        problems.ShouldContain(p => p.Contains("item entry is null"));
+        problems.ShouldContain(p => p.Contains("item has no value"));
+        problems.ShouldContain(p => p.Contains("condition entry is null"));
+    }
+
+    [Fact]
+    public void Null_names_types_and_controls_are_problems_not_exceptions()
+    {
+        var spec = new MockSpec(null, [new MockTextStyle(null!, "Tahoma", 8)], [
+            new MockDialogSpec(null!, null!),
+            new MockDialogSpec("PageDlg", [
+                new MockControl(null!, "Text", 0, 60, 10, 10),
+                new MockControl("Typeless", null!, 0, 60, 10, 10)])]);
+
+        var problems = MockSpecValidator.Problems(spec);
+
+        problems.Count(p => p.Contains("missing name")).ShouldBe(3);
+        problems.ShouldContain(p => p.Contains("'controls' is missing"));
+        problems.ShouldContain(p => p.Contains("Typeless") && p.Contains("no type"));
+    }
+
+    [Fact]
+    public void A_null_frame_means_wizard()
+    {
+        var dialog = new MockDialogSpec("PageDlg", [new MockControl("Host", "Edit", 0, 60, 10, 10, Property: "HOST")]) { Frame = null! };
+        MockSpecValidator.Problems(new MockSpec(null, null, [dialog])).ShouldBeEmpty();
+
+        var clash = new MockDialogSpec("PageDlg", [new MockControl(WizardFrame.Load().DefaultControl, "Text", 0, 60, 10, 10)]) { Frame = null! };
+        MockSpecValidator.Problems(new MockSpec(null, null, [clash])).ShouldHaveSingleItem().ShouldContain("wizard frame");
+    }
+
+    [Fact]
+    public void Frame_none_allows_a_frame_control_name()
+    {
+        var spec = new MockSpec(null, null, [new MockDialogSpec("PageDlg",
+            [new MockControl(WizardFrame.Load().DefaultControl, "PushButton", 0, 60, 56, 17, Text: "Go")], Frame: "none")]);
+
+        MockSpecValidator.Problems(spec).ShouldBeEmpty();
     }
 }
