@@ -1,7 +1,7 @@
 namespace AdvancedInstallerMcp.Msi;
 
-// Thin wrapper over an MSI database handle. The server only reads packages; Create, Execute and Commit exist so
-// tests can build small packages without Advanced Installer.
+// Thin wrapper over an MSI database handle. The server reads packages; Create, Execute and Commit exist for
+// PackageWriter (mock_dialog, ADR 0008) and the tests.
 public sealed class MsiDatabase : IDisposable
 {
     private readonly MsiHandle _handle;
