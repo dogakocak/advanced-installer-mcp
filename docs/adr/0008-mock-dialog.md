@@ -115,8 +115,10 @@ One card per page, generated from the spec so its format never varies and the ag
 - at the end, one `msiexec /i <package> /qn ...` line with every input property, so the unattended form is part of
   what the user approves.
 
-The skill (`dialogs.md`) makes this page a gate: the agent shows it, waits for an explicit approval, and changes the
-`.aip` only after it.
+The skill already has this gate (`setup-ui-review.md`, 2026-10-26): every screen as a wireframe drawn with
+`wireframe-template.html`, an input table, the unattended command line, approval before the `.aip` changes. With the
+`advinst` tools present the skill uses `mock_dialog`'s approval page instead of the hand-filled wireframe; without
+them the wireframe stays, so the skill still works on its own.
 
 ### Writer moves into the server
 
