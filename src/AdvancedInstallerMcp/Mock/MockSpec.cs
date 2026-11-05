@@ -25,7 +25,7 @@ public sealed record MockDialogSpec(
     string Frame = "wizard",
     [property: Description("Banner title (frame 'wizard').")] string? BannerTitle = null,
     [property: Description("Banner description line (frame 'wizard').")] string? BannerText = null,
-    [property: Description("Window title. Default: the frame's ('[ProductName] Setup').")] string? Title = null,
+    [property: Description("Window title. Default: the frame's ('[ProductName] [Setup]').")] string? Title = null,
     int? Width = null,
     int? Height = null,
     [property: Description("ControlCondition rows of this page.")] IReadOnlyList<MockCondition>? Conditions = null);

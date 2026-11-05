@@ -98,4 +98,34 @@ public sealed class MockDialogToolTests
         findings.GetArrayLength().ShouldBeGreaterThan(0);
         findings[0].GetProperty("severity").ValueKind.ShouldBe(JsonValueKind.String);
     }
+
+    [Fact]
+    public void A_null_spec_is_a_tool_error()
+    {
+        Should.Throw<McpException>(() => MockDialogTool.MockDialog(null!)).Message.ShouldContain("spec");
+    }
+
+    [Fact]
+    public void A_relative_output_dir_is_refused()
+    {
+        Should.Throw<McpException>(() => MockDialogTool.MockDialog(Spec, outputDir: "out")).Message.ShouldContain("full path");
+    }
+
+    [Fact]
+    public void Writer_and_file_errors_become_tool_errors_and_leave_no_temporary_package()
+    {
+        var file = Path.Combine(Path.GetTempPath(), $"advinst-mcp-{Guid.NewGuid():N}.txt");
+        File.WriteAllText(file, "not a folder");
+        var before = Directory.GetFiles(Path.GetTempPath(), "advinst-mock-*.msi").Length;
+        try
+        {
+            Should.Throw<McpException>(() => MockDialogTool.MockDialog(Spec, outputDir: file));
+
+            Directory.GetFiles(Path.GetTempPath(), "advinst-mock-*.msi").Length.ShouldBe(before);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
 }

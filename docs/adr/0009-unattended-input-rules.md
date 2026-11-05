@@ -62,7 +62,15 @@ uppercase, add a `Property` row, use the other control.
 
 `Directory` keys (`APPDIR`, `TARGETDIR`) are left out of `input-property-not-secure`: a target path chosen on a page
 travels through directory resolution (`SetTargetPath`, `CostFinalize`), not as a plain property, and none of the
-probe's packages secures them. This is checked against a real elevated install before the rule ships (open point).
+probe's packages secures them. The rule ships with this exemption; checking it against a real elevated install stays an
+open point.
+
+Windows Installer's Restricted Public Properties (`USERNAME`, `ALLUSERS`, `REBOOT`, the `ARP*` properties, the
+feature-state properties such as `ADDLOCAL` and `REMOVE`, and the rest of the documented list) reach the elevated
+install without `SecureCustomProperties`, so they are also left out of `input-property-not-secure`.
+
+A default set by a property-setting custom action (type 51) is not a `Property` row, so `choice-without-default` does
+not see it and reports the property.
 
 Properties a page only uses for itself (an `IAgree` check box, a UI-only flag mapped to another property) are not
 used by the install and produce no finding.

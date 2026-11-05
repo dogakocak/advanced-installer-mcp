@@ -121,6 +121,45 @@ public sealed class UnattendedRulesTests
         Findings("ComboBox", "MODE", p => Combos(p, "MODE", 2).WithProperty("MODE", "v1")).ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Restricted_public_property_used_by_the_install_is_not_flagged()
+    {
+        Findings("Edit", "USERNAME", p => UsedByInstall(p, "USERNAME")).ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(5, false)]
+    [InlineData(6, true)]
+    public void Radio_group_suggests_a_list_from_six_buttons(int count, bool expected)
+    {
+        var findings = Findings("RadioButtonGroup", "MODE", p => Radios(p, "MODE", count).WithProperty("MODE", "v1"));
+
+        findings.Any(f => f.Rule == "control-choice").ShouldBe(expected);
+        if (expected)
+        {
+            findings.Single().Message.ShouldContain("from 6 choices on");
+        }
+    }
+
+    [Theory]
+    [InlineData(3, true)]
+    [InlineData(4, false)]
+    public void Drop_down_list_suggests_radio_buttons_up_to_three_items(int count, bool expected)
+    {
+        const int comboList = 0x00020000;
+
+        Findings("ComboBox", "MODE", p => Combos(p, "MODE", count).WithProperty("MODE", "v1"), attributes: 3 | comboList)
+            .Any(f => f.Rule == "control-choice").ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("RadioButtonGroup", 3)]
+    [InlineData("ComboBox", 3 | 0x00020000)]
+    public void A_choice_control_filled_at_run_time_gets_no_choice_findings(string type, int attributes)
+    {
+        Findings(type, "MODE", p => p, attributes: attributes).ShouldBeEmpty();
+    }
+
     private static TestPackage UsedByInstall(TestPackage p, string property) =>
         p.WithCustomAction("UseIt", 51, "SINK", $"[{property}]").WithExecuteSequence("UseIt", 100);
 

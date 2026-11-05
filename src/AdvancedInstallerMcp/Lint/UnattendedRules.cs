@@ -5,9 +5,24 @@ namespace AdvancedInstallerMcp.Lint;
 // ADR 0009: inputs on a page must reach the install and be settable without the page (msiexec /qn PROP=value).
 public static class UnattendedRules
 {
-    private static readonly HashSet<string> InputTypes = new(StringComparer.Ordinal)
+    public static readonly IReadOnlySet<string> InputTypes = new HashSet<string>(StringComparer.Ordinal)
     {
         "Edit", "MaskedEdit", "PathEdit", "CheckBox", "RadioButtonGroup", "ComboBox", "ListBox",
+    };
+
+    // Windows Installer's "Restricted Public Properties" (Windows Installer docs, "SecureCustomProperties Property"):
+    // the elevated install receives these from the user's session without SecureCustomProperties listing them.
+    private static readonly IReadOnlySet<string> RestrictedPublicProperties = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "AdminUser", "ALLUSERS", "ARPAUTHORIZEDCDFPREFIX", "ARPCOMMENTS", "ARPCONTACT", "ARPHELPLINK", "ARPHELPTELEPHONE",
+        "ARPINSTALLLOCATION", "ARPNOMODIFY", "ARPNOREMOVE", "ARPNOREPAIR", "ARPPRODUCTICON", "ARPREADME", "ARPSIZE",
+        "ARPSYSTEMCOMPONENT", "ARPURLINFOABOUT", "ARPURLUPDATEINFO", "AVAILABLEFREEREG", "COMPANYNAME",
+        "DISABLEADVTSHORTCUTS", "DISABLEMEDIA", "DISABLEROLLBACK", "EXECUTEACTION", "EXECUTEMODE", "FILEADDDEFAULT",
+        "FILEADDLOCAL", "FILEADDSOURCE", "INSTALLLEVEL", "LIMITUI", "LOGACTION", "MEDIAPACKAGEPATH", "MSIINSTANCEGUID",
+        "MSINEWINSTANCE", "MSINODISABLEMEDIA", "PIDKEY", "PRIMARYFOLDER", "PROMPTROLLBACKCOST", "REBOOT", "REBOOTPROMPT",
+        "RESUME", "SEQUENCE", "SHORTFILENAMES", "TRANSFORMS", "TRANSFORMSATSOURCE", "TRANSFORMSSECURE", "USERNAME",
+        "ADDDEFAULT", "ADDLOCAL", "ADDSOURCE", "ADVERTISE", "COMPADDDEFAULT", "COMPADDLOCAL", "COMPADDSOURCE",
+        "REINSTALL", "REINSTALLMODE", "REMOVE", "PATCH",
     };
 
     // ComboBox: msidbControlAttributesComboList, a drop-down the user cannot type into.
@@ -37,7 +52,8 @@ public static class UnattendedRules
                     $"case ('{property.ToUpperInvariant()}') everywhere it is used.",
                     dialog.Name, control.Name);
             }
-            else if (used && !secure.Contains(property) && !package.InstallUsage.IsDirectory(property))
+            else if (used && !secure.Contains(property) && !package.InstallUsage.IsDirectory(property)
+                && !RestrictedPublicProperties.Contains(property))
             {
                 yield return new Finding("input-property-not-secure", Severity.Error,
                     $"The install uses '{property}', but it is not in SecureCustomProperties: when the install runs " +
@@ -61,7 +77,8 @@ public static class UnattendedRules
                 _ => (int?)null,
             };
 
-            if (choices is null)
+            // Filled at run time (no item rows): nothing to default to or to compare with.
+            if (choices is null or 0)
             {
                 continue;
             }
@@ -80,7 +97,7 @@ public static class UnattendedRules
             {
                 yield return new Finding("control-choice", Severity.Info,
                     $"{choices} radio buttons: a drop-down list (ComboBox with the ComboList attribute) is easier to " +
-                    "scan from 5 choices on.",
+                    "scan from 6 choices on.",
                     dialog.Name, control.Name);
             }
             else if (control.Type == "ComboBox" && control.Has(ComboList) && choices <= MaxComboListItemsForRadios)

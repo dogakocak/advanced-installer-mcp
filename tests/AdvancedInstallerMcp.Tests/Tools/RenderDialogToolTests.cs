@@ -88,4 +88,14 @@ public sealed class RenderDialogToolTests
         Should.Throw<McpException>(() => RenderDialogTool.RenderDialog(@"C:\no\such\package.msi", "WelcomeDlg"))
             .Message.ShouldContain("not found");
     }
+
+    [Fact]
+    public void A_relative_output_path_is_refused()
+    {
+        using var fixture = ConnectionDialogs.Create();
+        fixture.Build().Dispose();
+
+        Should.Throw<McpException>(() => RenderDialogTool.RenderDialog(fixture.Path, ConnectionDialogs.Fixed, outputPath: "dialog.png"))
+            .Message.ShouldContain("full path");
+    }
 }

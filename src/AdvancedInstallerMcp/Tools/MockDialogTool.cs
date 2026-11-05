@@ -43,6 +43,16 @@ public static class MockDialogTool
     {
         var dpi = DisplayScaling.ToDpi(scaling);
 
+        if (spec is null)
+        {
+            throw new McpException("The spec is missing.");
+        }
+
+        if (outputDir is not null && !Path.IsPathFullyQualified(outputDir))
+        {
+            throw new McpException("outputDir must be a full path, for example C:/Temp/mock.");
+        }
+
         var problems = MockSpecValidator.Problems(spec);
         if (problems.Count > 0)
         {
@@ -95,6 +105,10 @@ public static class MockDialogTool
                     new TextContentBlock { Text = report },
                 ],
             };
+        }
+        catch (Exception exception) when (exception is MsiException or IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            throw new McpException($"mock_dialog could not write or draw the pages: {exception.Message}", exception);
         }
         finally
         {

@@ -70,7 +70,8 @@ The spec mirrors the Windows Installer tables, with their column names:
 `"frame": "wizard"` (the default) adds the rows every Advanced Installer wizard page has: banner bitmap and title
 texts, the separator lines, Back/Next/Cancel, and `Control_First`/`Default`/`Cancel`. `"frame": "none"` adds
 nothing. The frame rows, the dialog size (370 × 270), `DefaultUIFont` and the default `TextStyle` rows are copied
-from a package Advanced Installer 24.0 builds from a new project, and kept as a test fixture with the source noted.
+from a package Advanced Installer 24.1 builds from a new project. They are an embedded resource,
+`src/AdvancedInstallerMcp/Mock/WizardFrame.json`, captured by `tools/frame/capture-wizard-frame.cs`.
 A frame that differs from Advanced Installer's would make every approved page differ from the built one in rows the
 user never chose.
 
@@ -142,7 +143,7 @@ only reads packages; `MsiDatabase`'s comment and `Create`/`Execute`/`Commit` vis
 
 ## Consequences
 
-- One new tool, one new writer surface in `src/`, a frame fixture taken from Advanced Installer 24.0.
+- One new tool, one new writer surface in `src/`, a frame resource captured from Advanced Installer 24.1.
 - The renderer draws a `ComboBox`'s current value; with `ComboBox` rows it should show the item's text instead. Small
   change, needed for mocks and for built packages alike.
 - What the user approves is rows; after the build, `lint_dialog` and `render_dialog` on the real package show whether

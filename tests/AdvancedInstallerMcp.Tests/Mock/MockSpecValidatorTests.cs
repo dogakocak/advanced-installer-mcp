@@ -184,4 +184,119 @@ public sealed class MockSpecValidatorTests
 
         MockSpecValidator.Problems(spec).ShouldBeEmpty();
     }
+
+    [Fact]
+    public void Empty_or_null_property_values_are_refused()
+    {
+        var spec = new MockSpec(new Dictionary<string, string> { ["A_EMPTY"] = "", ["B_NULL"] = null! }, null,
+            [new MockDialogSpec("PageDlg", [new MockControl("Host", "Edit", 20, 60, 200, 18, Property: "HOST")])]);
+
+        var problems = MockSpecValidator.Problems(spec);
+
+        problems.Count.ShouldBe(2);
+        problems.ShouldContain(p => p.Contains("A_EMPTY") && p.Contains("empty"));
+        problems.ShouldContain(p => p.Contains("B_NULL") && p.Contains("empty"));
+    }
+
+    [Fact]
+    public void An_empty_item_value_is_refused()
+    {
+        MockSpecValidator.Problems(Page(new MockControl("Mode", "RadioButtonGroup", 20, 90, 200, 40, Property: "MODE",
+                Items: [new MockItem("")])))
+            .ShouldHaveSingleItem().ShouldContain("item");
+    }
+
+    [Fact]
+    public void An_empty_or_null_face_name_is_refused()
+    {
+        var spec = new MockSpec(null, [new MockTextStyle("OneFont", "", 8), new MockTextStyle("TwoFont", null!, 8)],
+            [new MockDialogSpec("PageDlg", [])]);
+
+        var problems = MockSpecValidator.Problems(spec);
+
+        problems.Count.ShouldBe(2);
+        problems.ShouldContain(p => p.Contains("OneFont") && p.Contains("face name"));
+        problems.ShouldContain(p => p.Contains("TwoFont") && p.Contains("face name"));
+    }
+
+    [Fact]
+    public void An_empty_or_null_condition_text_is_refused()
+    {
+        var spec = new MockSpec(null, null, [new MockDialogSpec("PageDlg",
+            [new MockControl("Host", "Edit", 20, 60, 200, 18, Property: "HOST")],
+            Conditions: [new MockCondition("Host", "Hide", ""), new MockCondition("Host", "Show", null!)])]);
+
+        var problems = MockSpecValidator.Problems(spec);
+
+        problems.Count.ShouldBe(2);
+        problems.ShouldAllBe(p => p.Contains("condition has no text"));
+    }
+
+    [Fact]
+    public void Two_identical_condition_rows_are_refused()
+    {
+        var spec = new MockSpec(null, null, [new MockDialogSpec("PageDlg",
+            [new MockControl("Host", "Edit", 20, 60, 200, 18, Property: "HOST")],
+            Conditions: [new MockCondition("Host", "Hide", "X=1"), new MockCondition("Host", "Hide", "X=1"), new MockCondition("Host", "Hide", "X=2")])]);
+
+        MockSpecValidator.Problems(spec).ShouldHaveSingleItem().ShouldContain("twice");
+    }
+
+    [Fact]
+    public void Frame_none_without_controls_is_refused()
+    {
+        MockSpecValidator.Problems(new MockSpec(null, null, [new MockDialogSpec("PageDlg", [], Frame: "none")]))
+            .ShouldHaveSingleItem().ShouldContain("no controls");
+    }
+
+    [Fact]
+    public void No_dialogs_is_refused()
+    {
+        MockSpecValidator.Problems(new MockSpec(null, null, [])).ShouldHaveSingleItem().ShouldContain("nothing to draw");
+    }
+
+    [Fact]
+    public void Dialog_names_that_differ_only_in_case_are_refused()
+    {
+        var spec = new MockSpec(null, null, [new MockDialogSpec("PageDlg", []), new MockDialogSpec("pagedlg", [])]);
+
+        MockSpecValidator.Problems(spec).ShouldHaveSingleItem().ShouldContain("differ only in case");
+    }
+
+    [Fact]
+    public void The_same_items_property_with_different_items_is_refused_naming_both_places()
+    {
+        var spec = new MockSpec(null, null, [
+            new MockDialogSpec("OneDlg", [new MockControl("Mode", "RadioButtonGroup", 20, 60, 200, 40, Property: "MODE",
+                Items: [new MockItem("a"), new MockItem("b")])]),
+            new MockDialogSpec("TwoDlg", [new MockControl("Mode2", "RadioButtonGroup", 20, 60, 200, 40, Property: "MODE",
+                Items: [new MockItem("a"), new MockItem("c")])])]);
+
+        var problem = MockSpecValidator.Problems(spec).ShouldHaveSingleItem();
+
+        problem.ShouldContain("OneDlg.Mode");
+        problem.ShouldContain("TwoDlg.Mode2");
+    }
+
+    [Fact]
+    public void The_same_items_property_with_identical_items_is_allowed()
+    {
+        var spec = new MockSpec(null, null, [
+            new MockDialogSpec("OneDlg", [new MockControl("Mode", "RadioButtonGroup", 20, 60, 200, 40, Property: "MODE",
+                Items: [new MockItem("a", "A"), new MockItem("b", "B")])]),
+            new MockDialogSpec("TwoDlg", [new MockControl("Mode2", "RadioButtonGroup", 20, 60, 200, 40, Property: "MODE",
+                Items: [new MockItem("a", "A"), new MockItem("b", "B")])])]);
+
+        MockSpecValidator.Problems(spec).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_radio_group_and_a_combo_on_one_property_do_not_clash()
+    {
+        var spec = new MockSpec(null, null, [new MockDialogSpec("OneDlg", [
+            new MockControl("Mode", "RadioButtonGroup", 20, 60, 200, 40, Property: "MODE", Items: [new MockItem("a")]),
+            new MockControl("Mode2", "ComboBox", 20, 120, 200, 18, Property: "MODE", Items: [new MockItem("b")])])]);
+
+        MockSpecValidator.Problems(spec).ShouldBeEmpty();
+    }
 }

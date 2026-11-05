@@ -24,6 +24,19 @@ public static class ApprovalPage
             .Append("<title>Setup pages for review</title><style>").Append(Style).Append("</style></head><body>")
             .Append("<h1>Setup pages for review</h1>");
 
+        var general = findings.Where(f => f.Dialog is null).ToList();
+        if (general.Count > 0)
+        {
+            html.Append("<section><h2>Findings for all pages</h2><ul>");
+            foreach (var finding in general)
+            {
+                html.Append("<li class=\"").Append(finding.Severity).Append("\"><code>").Append(Encode(finding.Rule)).Append("</code> ")
+                    .Append(Encode(finding.Message)).Append("</li>");
+            }
+
+            html.Append("</ul></section>");
+        }
+
         foreach (var dialog in spec.Dialogs)
         {
             html.Append("<section><h2>").Append(Encode(dialog.Name)).Append("</h2>")
@@ -93,7 +106,7 @@ public static class ApprovalPage
     }
 
     private static bool IsInput(MockControl control) =>
-        control.Property is not null && MockSpecValidator.InputTypes.Contains(control.Type);
+        control.Property is not null && UnattendedRules.InputTypes.Contains(control.Type);
 
     private static IEnumerable<string> Forms(MockControl control)
     {

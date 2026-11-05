@@ -67,6 +67,48 @@ public sealed class MockPackageBuilderTests
         MockPackageBuilder.Build(spec).Controls.Select(c => c.Name).ShouldBe(["Mode", "Host"]);
     }
 
+    [Fact]
+    public void Identical_items_on_two_pages_are_written_once_and_the_package_writes()
+    {
+        MockControl Mode(string name) => new(name, "RadioButtonGroup", 20, 60, 300, 30, Property: "MODE",
+            Items: [new MockItem("a", "&First"), new MockItem("b", "&Second")]);
+        var spec = new MockSpec(null, null, [new MockDialogSpec("OneDlg", [Mode("ModeOne")]), new MockDialogSpec("TwoDlg", [Mode("ModeTwo")])]);
+
+        MockSpecValidator.Problems(spec).ShouldBeEmpty();
+        MockPackageBuilder.Build(spec).RadioButtons.Count.ShouldBe(2);
+        using var database = Write(spec, out var path);
+        database.Dispose();
+        File.Delete(path);
+    }
+
+    [Fact]
+    public void The_wizard_tab_chain_runs_through_the_body_and_the_frame()
+    {
+        var rows = MockPackageBuilder.Build(Spec);
+
+        var chain = new List<string>();
+        var name = "Next";
+        do
+        {
+            chain.Add(name);
+            name = rows.Controls.Single(c => c.Dialog == "PageDlg" && c.Name == name).Next!;
+        }
+        while (name != "Next");
+
+        chain.ShouldBe(["Next", "Mode", "Host", "BottomLine", "Logo", "Cancel", "Back", "BannerBitmap", "Title", "Description", "BannerLine"]);
+    }
+
+    [Fact]
+    public void Frame_none_body_controls_form_their_own_closed_cycle()
+    {
+        var spec = Spec with { Dialogs = [Spec.Dialogs[0] with { Frame = "none" }] };
+
+        var rows = MockPackageBuilder.Build(spec);
+
+        rows.Controls.Select(c => (c.Name, c.Next)).ShouldBe([("Mode", "Host"), ("Host", "Mode")]);
+        rows.Dialogs.Single().FirstControl.ShouldBe("Mode");
+    }
+
     private static MsiDatabase Write(MockSpec spec, out string path)
     {
         path = Path.Combine(Path.GetTempPath(), $"advinst-mcp-{Guid.NewGuid():N}.msi");

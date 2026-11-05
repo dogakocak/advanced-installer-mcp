@@ -12,7 +12,7 @@ public sealed class InstallUsage
     {
         "Dialog", "Control", "ControlEvent", "ControlCondition", "EventMapping", "RadioButton", "ComboBox", "ListBox",
         "ListView", "CheckBox", "TextStyle", "UIText", "Binary", "Icon", "Property", "InstallUISequence",
-        "AdminUISequence", "_Validation", "_Tables", "_Columns", "_Streams", "_Storages",
+        "AdminUISequence", "AdvtUISequence", "_Validation", "_Tables", "_Columns", "_Streams", "_Storages",
     };
 
     private static readonly string[] ExecuteSequences = ["InstallExecuteSequence", "AdminExecuteSequence", "AdvtExecuteSequence"];

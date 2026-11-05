@@ -30,7 +30,7 @@ public sealed class ApprovalPageTests
         html.ShouldContain("Two fixed choices.");
         html.ShouldContain("TRUST_CERT=1");
         html.ShouldContain("MsiHiddenProperties");
-        html.ShouldNotContain(">Hint<");
+        html.ShouldNotContain("<td>Text</td>"); // the Hint control is not an input, so it has no row
     }
 
     [Fact]
@@ -54,5 +54,14 @@ public sealed class ApprovalPageTests
     {
         ApprovalPage.CommandLine(Spec)
             .ShouldBe("msiexec /i Setup.msi /qn /l*v install.log CERT_MODE=pfx CERT_PASSWORD=\"<value>\" TRUST_CERT=1");
+    }
+
+    [Fact]
+    public void Package_level_findings_get_their_own_section_before_the_pages()
+    {
+        var html = ApprovalPage.Html(Spec, [new Finding("font-missing", Severity.Warning, "Tahoma is not installed.")]);
+
+        html.ShouldContain("Tahoma is not installed.");
+        html.IndexOf("Tahoma is not installed.", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("<h2>CertificateDlg</h2>", StringComparison.Ordinal));
     }
 }

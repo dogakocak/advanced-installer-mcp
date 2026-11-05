@@ -42,6 +42,11 @@ public static class RenderDialogTool
             throw new McpException("outputPath must end in .png.");
         }
 
+        if (outputPath is not null && !Path.IsPathFullyQualified(outputPath))
+        {
+            throw new McpException("outputPath must be a full path, for example C:/Temp/dialog.png.");
+        }
+
         using var database = PackageFile.Open(msiPath, "render_dialog");
         var package = DialogPackage.Load(database);
         var found = package.FindDialog(dialog) ?? throw new McpException(

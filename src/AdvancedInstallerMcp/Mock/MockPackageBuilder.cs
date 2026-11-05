@@ -40,9 +40,11 @@ public static class MockPackageBuilder
             rows.Binaries.Add((frame.BannerBinary, PlainBitmap(bitmap.Width, bitmap.Height)));
         }
 
+        // The item tables are keyed by property and order; identical lists on several controls are written once.
+        var itemsWritten = new HashSet<(string Type, string Property)>();
         foreach (var dialog in spec.Dialogs)
         {
-            AddDialog(rows, frame, dialog);
+            AddDialog(rows, frame, dialog, itemsWritten);
         }
 
         return rows;
@@ -51,7 +53,7 @@ public static class MockPackageBuilder
     // A null Frame (absent in the JSON) means the default, "wizard".
     private static bool IsWizard(MockDialogSpec dialog) => dialog.Frame is null or "wizard";
 
-    private static void AddDialog(PackageRows rows, WizardFrame frame, MockDialogSpec dialog)
+    private static void AddDialog(PackageRows rows, WizardFrame frame, MockDialogSpec dialog, HashSet<(string Type, string Property)> itemsWritten)
     {
         var wizard = IsWizard(dialog);
         var body = dialog.Controls
@@ -80,7 +82,10 @@ public static class MockPackageBuilder
 
         foreach (var control in dialog.Controls.Where(c => c.Items is { Count: > 0 }))
         {
-            AddItems(rows, control);
+            if (itemsWritten.Add((control.Type, control.Property!)))
+            {
+                AddItems(rows, control);
+            }
         }
     }
 
