@@ -39,10 +39,11 @@ built MSI and what the user sees, not the build's exit code.**
 
 ## When the advinst MCP tools are available
 
-If tools named `build`, `lint_dialog`, `render_dialog` and `drive_dialog` (server `advinst`) are in your tool list, use them:
+If tools named `build`, `lint_dialog`, `render_dialog`, `drive_dialog` and `mock_dialog` (server `advinst`) are in your tool list, use them:
 
 | Instead of | Use |
 |---|---|
+| Drawing a wireframe of proposed setup screens by hand | `mock_dialog` (table rows → pictures, findings and an approval page; nothing is built or changed) |
 | Running `AdvancedInstaller.com /build` and reading its output | `build` (structured result; `validation` holds the `AI_ICE` notes, `errors` the real failures; read `unrecognized`) |
 | Estimating whether text fits from character counts | `lint_dialog` on the built MSI |
 | Installing, driving the wizard and taking screenshots to see a dialog | `render_dialog` (pass `properties` for another state of the page) |

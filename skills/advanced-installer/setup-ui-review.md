@@ -7,9 +7,14 @@ Then build the dialogs to match the approved wireframes exactly.
 ## What to show
 
 1. **All screens in wizard order**, the unchanged standard ones (Welcome, Ready, Progress, Finish) included, so the
-   user sees the whole flow. Draw them with the classes in `wireframe-template.html` (next to this file):
-   - if your client renders HTML inline in the chat, render it there;
-   - otherwise copy the template into the project's scratch area, fill it in and open it.
+   user sees the whole flow.
+   - **If the `mock_dialog` tool (server `advinst`) is available**, write the new or changed screens as its spec
+     (table rows; every input control with a `rationale`, every page with a `description`), run it with `outputDir`
+     in the project's scratch area, fix what it refuses and what its findings say, and open the `index.html` it
+     writes: that page is the review. The standard screens can be listed by name.
+   - Otherwise draw them with the classes in `wireframe-template.html` (next to this file): if your client renders
+     HTML inline in the chat, render it there; otherwise copy the template into the project's scratch area, fill it
+     in and open it.
 2. **One or two lines per screen**: what it asks and how it behaves (when Next is disabled, which fields a choice
    enables).
 3. **An input table** with one row per input:
@@ -82,8 +87,8 @@ msiexec /i Product.msi /qn /l*v install.log APPDIR="D:\App" SERVER_HOST=host.exa
 
 1. Build the dialogs with the controls, texts, properties and conditions of the approved wireframes, nothing more.
    A change you find necessary while building goes back to the user as an updated wireframe.
-2. `build`, then `lint_dialog` on the package, then `render_dialog` for each changed dialog: compare the render
-   with the approved wireframe, screen by screen.
+2. `build`, then `lint_dialog` on the package (its unattended findings must be empty or explained), then
+   `render_dialog` for each changed dialog: compare the render with the approved mock or wireframe, screen by screen.
 3. `drive_dialog` for the behaviour the review promised (Next disabled until…, a choice enabling fields).
 4. Check unattended: run the documented command line against the built MSI, or at least verify in the `Property`,
    `ControlEvent` and `InstallExecuteSequence` tables that every input is public, mapped and validated.

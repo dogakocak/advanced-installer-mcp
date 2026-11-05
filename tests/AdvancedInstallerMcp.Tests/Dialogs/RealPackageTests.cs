@@ -51,4 +51,27 @@ public sealed class RealPackageTests
             image.Height.ShouldBe(Math.Max(1, InstallerUnits.ToPixels(dialog.Height, 96)), name);
         }
     }
+
+    // ADR 0009's rules over a whole package: they run without throwing and every finding names its control. The counts
+    // go to the test output, to compare with the probe the ADR records.
+    [Fact]
+    public void The_unattended_rules_run_over_a_real_package()
+    {
+        var path = Environment.GetEnvironmentVariable("ADVINST_MCP_REAL_MSI");
+        Assert.SkipWhen(string.IsNullOrEmpty(path), "ADVINST_MCP_REAL_MSI is not set.");
+
+        using var database = MsiDatabase.OpenReadOnly(path!);
+        var package = DialogPackage.Load(database);
+        string[] rules = ["input-property-private", "input-property-not-secure", "password-not-hidden", "choice-without-default", "control-choice"];
+
+        var findings = AdvancedInstallerMcp.Lint.DialogLinter.Lint(package, package.DialogNames.Select(n => package.FindDialog(n)!))
+            .Where(f => rules.Contains(f.Rule))
+            .ToList();
+
+        findings.ShouldAllBe(f => f.Dialog != null && f.Control != null);
+        foreach (var rule in rules)
+        {
+            TestContext.Current.TestOutputHelper?.WriteLine($"{rule}: {findings.Count(f => f.Rule == rule)}");
+        }
+    }
 }
