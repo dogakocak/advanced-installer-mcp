@@ -59,6 +59,12 @@ public sealed class TestPackage : IDisposable
         return this;
     }
 
+    public TestPackage WithDirectory(string directory, string? parent, string defaultDir)
+    {
+        _rows.Directories.Add((directory, parent, defaultDir));
+        return this;
+    }
+
     public TestPackage WithTextStyle(string name, string faceName, int size, int? color = null, int? styleBits = null)
     {
         _rows.TextStyles.Add(new TextStyleRow(name, faceName, size, color, styleBits));

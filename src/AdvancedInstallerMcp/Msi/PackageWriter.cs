@@ -20,6 +20,18 @@ public static class PackageWriter
             database.SetPackageSummary(NewGuid());
         }
 
+        if (rows.Directories.Count > 0)
+        {
+            database.Execute(
+                "CREATE TABLE `Directory` (`Directory` CHAR(72) NOT NULL, `Directory_Parent` CHAR(72), " +
+                "`DefaultDir` CHAR(255) NOT NULL LOCALIZABLE PRIMARY KEY `Directory`)");
+            foreach (var (directory, parent, defaultDir) in rows.Directories)
+            {
+                database.Execute("INSERT INTO `Directory` (`Directory`, `Directory_Parent`, `DefaultDir`) VALUES (?, ?, ?)",
+                    directory, parent, defaultDir);
+            }
+        }
+
         WriteSequence(database, "InstallUISequence", rows.UiSequence);
         WriteSequence(database, "InstallExecuteSequence", rows.ExecuteSequence);
 

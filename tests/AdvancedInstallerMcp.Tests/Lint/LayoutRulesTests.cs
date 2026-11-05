@@ -124,6 +124,7 @@ public sealed class LayoutRulesTests
     public void Radio_button_group_overlaps_only_with_its_buttons()
     {
         var findings = Lint(p => p
+                .WithProperty("MODE", "Repair")
                 .WithRadioButton("MODE", 1, "Repair", 60, 0, 200, 15, "&Repair")
                 .WithRadioButton("MODE", 2, "Remove", 60, 60, 200, 15, "Re&move")
                 .WithControl(Dlg, "Group", "RadioButtonGroup", 20, 55, 290, 120, property: "MODE", next: "Next")

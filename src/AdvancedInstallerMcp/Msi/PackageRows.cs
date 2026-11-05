@@ -50,6 +50,7 @@ public sealed class PackageRows
     public List<SequenceRow> ExecuteSequence { get; } = [];
     public List<LaunchConditionRow> LaunchConditions { get; } = [];
     public List<EmbeddedUiRow> EmbeddedUi { get; } = [];
+    public List<(string Directory, string? Parent, string DefaultDir)> Directories { get; } = [];
 
     // Dialog, Control and TextStyle exist even when empty, as in any package with a UI.
     public bool WithUiTables { get; set; } = true;

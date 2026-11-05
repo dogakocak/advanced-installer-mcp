@@ -16,7 +16,10 @@ public static class LintDialogTool
         "it, at 100, 125 and 150 % display scaling, and reports labels that are cut off, with the smallest control " +
         "size in installer units that fits. It also reports controls that reach past the dialog's edge, controls whose " +
         "visible content overlaps, and a broken tab order (Control_Next links that do not form a closed cycle, controls " +
-        "the keyboard cannot reach). Use it after changing dialog texts, fonts, control sizes, positions or tab order, " +
+        "the keyboard cannot reach). It also checks the inputs (edit boxes, check boxes, radio buttons, lists) for what " +
+        "breaks an unattended install (msiexec /qn PROP=value): private or non-secure properties the install uses, " +
+        "password fields missing from MsiHiddenProperties, choices without a default; and suggests radio buttons or a " +
+        "list where the number of choices calls for the other. Use it after changing dialog texts, fonts, control sizes, positions or tab order, " +
         "instead of estimating text width from character counts. Point it at the .msi from the build output, not the .aip.")]
     public static LintReport LintDialog(
         [Description("Full path of the built .msi package.")] string msiPath,

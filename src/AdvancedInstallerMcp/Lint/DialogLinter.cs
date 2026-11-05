@@ -3,7 +3,7 @@ using AdvancedInstallerMcp.Dialogs;
 namespace AdvancedInstallerMcp.Lint;
 
 // lint_dialog's checks: whether the text of Text, CheckBox and PushButton controls fits, and the font settings that make
-// that answer less certain (ADR 0003); bounds, overlaps, the tab chain and the embedded UI warning (ADR 0005).
+// that answer less certain (ADR 0003); bounds, overlaps, the tab chain and the embedded UI warning (ADR 0005); inputs that must work unattended (ADR 0009).
 public static class DialogLinter
 {
     // Calibrated 2026-10-11 against msiexec on Windows 11 at 96 DPI with Tahoma 8 pt, four labels each
@@ -80,6 +80,7 @@ public static class DialogLinter
             }
 
             findings.AddRange(LayoutRules.Check(package, dialog));
+            findings.AddRange(UnattendedRules.Check(package, dialog));
         }
 
         findings.InsertRange(0, PackageFindings(package, anyText, substitutedFaces));
