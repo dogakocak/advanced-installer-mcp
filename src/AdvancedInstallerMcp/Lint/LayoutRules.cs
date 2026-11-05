@@ -24,7 +24,7 @@ public static class LayoutRules
 
     // Controls the user operates to get through the dialog. Lists that only show information (FilesInUse,
     // VolumeCostList, ListBox) and ScrollableText are left out of many standard templates' tab cycles on purpose.
-    private static readonly HashSet<string> FocusableTypes = new(StringComparer.Ordinal)
+    internal static readonly HashSet<string> FocusableTypes = new(StringComparer.Ordinal)
     {
         "CheckBox", "ComboBox", "DirectoryCombo", "DirectoryList", "Edit", "Hyperlink", "ListView", "MaskedEdit",
         "PathEdit", "PushButton", "RadioButtonGroup", "SelectionTree", "VolumeSelectCombo",
